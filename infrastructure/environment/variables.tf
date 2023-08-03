@@ -54,3 +54,8 @@ variable "subnet_cidr_block" {
   type        = string
   default     = "10.0.1.0/24"
 }
+
+variable "aws_region" {
+  description = "Aws region"
+  type        = string
+}

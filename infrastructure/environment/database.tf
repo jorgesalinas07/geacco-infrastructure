@@ -2,7 +2,7 @@ resource "aws_subnet" "base_project_db_subnet" {
   count             = var.subnet_count.db_private
   vpc_id            = aws_vpc.base_project_VPC.id
   cidr_block        = var.subnet_cidr_block
-  availability_zone = data.aws_availability_zones.available.state[count.index]
+  availability_zone = data.aws_availability_zones.available.state
 
   tags = {
     Name = terraform.workspace == "stg" ? "geacco_app_db_subnet_stg_${count.index}" : "geacco_app_db_subnet_prod_${count.index}"

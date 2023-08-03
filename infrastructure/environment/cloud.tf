@@ -92,18 +92,23 @@ data "aws_ami" "ubuntu" {
 }
 
 resource "aws_instance" "base_project_EC2_instance" {
-  count                  = var.settings.web_app.count
-  ami                    = data.aws_ami.ubuntu.id
-  instance_type          = var.settings.web_app.instance_type
-  subnet_id              = aws_subnet.base_project_cloud_subnet[count.index].id
-  key_name               = aws_key_pair.geacco_app_kp.key_name
-  vpc_security_group_ids = [aws_security_group.RDS_security_group.id]
+  count         = var.settings.web_app.count
+  ami           = data.aws_ami.ubuntu.id
+  instance_type = var.settings.web_app.instance_type
+  subnet_id     = aws_subnet.base_project_cloud_subnet[count.index].id
+  key_name      = aws_key_pair.geacco_app_kp.key_name
+  vpc_security_group_ids = [
+    aws_security_group.RDS_security_group.id,
+    aws_security_group.S3_security_group.id,
+    aws_security_group.ECR_security_group.id,
+  ]
 
   tags = {
     Name = terraform.workspace == "stg" ? "geacco_EC2_instance_stg" : "geacco_EC2_instance_prod"
   }
 }
 
+// Get internet connectivity
 resource "aws_eip" "geacco_EC2_eip" {
   count = var.settings.web_app.count
 
