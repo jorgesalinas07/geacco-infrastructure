@@ -26,3 +26,9 @@ output "database_port" {
   description = "The port of the database"
   value       = aws_db_instance.geacco_db_instance.port
 }
+
+# base_ecr_ui = "388813176377.dkr.ecr.us-east-1.amazonaws.com/geacco_app_stg"
+# database_endpoint = "geaccodbstg.ciutmnlgyney.us-east-1.rds.amazonaws.com"
+# database_port = 5432
+# web_public_dns = "ec2-44-198-243-84.compute-1.amazonaws.com"
+# web_public_ip = "44.198.243.84"

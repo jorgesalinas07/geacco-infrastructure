@@ -1,8 +1,8 @@
 resource "aws_subnet" "base_project_db_subnet" {
   count             = var.subnet_count.db_private
   vpc_id            = aws_vpc.base_project_VPC.id
-  cidr_block        = var.subnet_cidr_block
-  availability_zone = data.aws_availability_zones.available.state
+  cidr_block        = var.db_subnet_cidr_block[count.index]
+  availability_zone = data.aws_availability_zones.available.names[count.index]
 
   tags = {
     Name = terraform.workspace == "stg" ? "geacco_app_db_subnet_stg_${count.index}" : "geacco_app_db_subnet_prod_${count.index}"
@@ -13,7 +13,7 @@ resource "aws_route_table" "base_project_db_route_table" {
   vpc_id = aws_vpc.base_project_VPC.id
 
   tags = {
-    Name = terraform.workspace == "stg" ? "geacco_app_db_table_stg" : "geacco_app_db_table_prod"
+    Name = terraform.workspace == "stg" ? "geacco_app_db_route_table_stg" : "geacco_app_db_route_table_prod"
   }
 }
 
@@ -28,11 +28,13 @@ resource "aws_security_group" "RDS_security_group" {
   description = "A security group for the RDS database"
   vpc_id      = aws_vpc.base_project_VPC.id
 
-  // Only the EC2 instances should be able to communicate with RDS
-  egress {
-    description     = "Allow RDS traffic from the web only"
-    from_port       = "3306"
-    to_port         = "3306"
+  // RDS should be on a private subnet and naccessible via the internet.
+
+  // Only the EC2 instances should be able to communicate with RDS // Checked
+  ingress {
+    description     = "Allow RDS traffic from the web only (EC2)"
+    from_port       = 5432
+    to_port         = 5432
     protocol        = "tcp"
     security_groups = [aws_security_group.EC2_security_group.id]
   }
@@ -52,14 +54,15 @@ resource "aws_db_subnet_group" "geacco_db_subnet_group" {
 }
 
 resource "aws_db_instance" "geacco_db_instance" {
-  allocated_storage      = var.settings.allocated_storage
+  identifier             = terraform.workspace == "stg" ? "geaccodbstg" : "geaccodbprod"
+  allocated_storage      = var.settings.database.allocated_storage
   db_name                = terraform.workspace == "stg" ? "geacco_db_stg" : "geacco_db_prod"
-  engine                 = var.settings.engine
-  engine_version         = var.settings.engine_version
-  instance_class         = var.settings.instance_class
+  engine                 = var.settings.database.engine
+  engine_version         = var.settings.database.engine_version
+  instance_class         = var.settings.database.instance_class
   username               = var.db_username
   password               = var.db_password
   db_subnet_group_name   = aws_db_subnet_group.geacco_db_subnet_group.id
   vpc_security_group_ids = [aws_security_group.RDS_security_group.id]
-  skip_final_snapshot    = var.settings.skip_final_snapshot
+  skip_final_snapshot    = var.settings.database.skip_final_snapshot
 }

@@ -21,31 +21,12 @@ resource "aws_security_group" "ALB_security_group" {
     from_port   = "22"
     to_port     = "22"
     protocol    = "tcp"
-    cidr_blocks = ["${var.my_ip}/32"] #Set ip. Why /32?
+    cidr_blocks = ["${var.my_ip}/32"]
   }
 
   tags = {
     Name = terraform.workspace == "stg" ? "geacco_app_alb_security_group_stg" : "geacco_app_alb_security_group_prod"
   }
-}
-
-resource "aws_route_table" "base_project_alb_route_table" {
-  vpc_id = aws_vpc.base_project_VPC.id
-
-  route {
-    cidr_block = "0.0.0.0/0"
-    gateway_id = aws_internet_gateway.base_project_gw.id
-  }
-
-  tags = {
-    Name = terraform.workspace == "stg" ? "geacco_app_bucket_route_table_stg" : "geacco_app_bucket_route_table_prod"
-  }
-}
-
-resource "aws_route_table_association" "base_project_alb_route_table_association" {
-  count          = var.subnet_count.cloud_private
-  subnet_id      = aws_subnet.base_project_cloud_subnet[count.index].id
-  route_table_id = aws_route_table.base_project_alb_route_table.id
 }
 
 resource "aws_lb_target_group" "base_project_alb_target_group" {
@@ -57,7 +38,7 @@ resource "aws_lb_target_group" "base_project_alb_target_group" {
 }
 
 resource "aws_alb_target_group_attachment" "base_project_alb_attachment" {
-  count            = var.subnet_count.cloud_private
+  count         = var.settings.web_app.count
   target_group_arn = aws_lb_target_group.base_project_alb_target_group.arn
   target_id        = aws_instance.base_project_EC2_instance[count.index].id
 }
