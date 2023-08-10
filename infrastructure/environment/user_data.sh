@@ -1,18 +1,31 @@
-# Make sure we have all the latest updates when we launch this instance
+# # Make sure we have all the latest updates when we launch this instance
 sudo apt update
 
-# Install postgresql
-sudo apt install postgresql postgresql-contrib
-sudo systemctl start postgresql.service
+# Install aws cli
+sudo apt install unzip
+curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+unzip awscliv2.zip
+sudo ./aws/install
 
-# Install docker
-sudo apt install apt-transport-https ca-certificates curl software-properties-common
-curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
-sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu focal stable"
-sudo apt install docker-ce
+#Adding cluster name in ecs config
+echo ECS_CLUSTER=base-project-ecs-cluster >> /etc/ecs/ecs.config
+cat /etc/ecs/ecs.config | grep "ECS_CLUSTER"
+
+# # Install postgresql
+# sudo apt install postgresql postgresql-contrib ## Add y flag
+# sudo systemctl start postgresql.service
+# Use sudo -i -u postgres
+# psql --host=<host> --port=<port> --username=<username> --password <password>
+
+# # Install docker
+# sudo apt -y install apt-transport-https ca-certificates curl software-properties-common
+# curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+# sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu focal stable"
+# sudo apt -y install docker-ce
+
 
 # Connect to db
-sudo -u postgres psql -h geaccodbstg.ciutmnlgyney.us-east-1.rds.amazonaws.com -p 5432 -d geacco_db_stg -U geaccousername -W
+# sudo -u postgres psql -h geaccodbstg.ciutmnlgyney.us-east-1.rds.amazonaws.com -p 5432 -d geacco_db_stg -U geaccousername -W
 # #! /bin/bash
 # set -e
 # # Ouput all log

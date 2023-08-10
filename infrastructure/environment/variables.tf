@@ -4,6 +4,12 @@ variable "IMAGE_TAG" {
   default     = "latest"
 }
 
+variable "REPOSITORY_URL" {
+  description = "ECR Image tag"
+  type        = string
+  default     = "latest"
+}
+
 variable "subnet_count" {
   description = "Number of subnet"
   type        = map(number)

@@ -2,7 +2,6 @@ resource "aws_subnet" "base_project_cloud_subnet" {
   count             = var.subnet_count.cloud_private
   vpc_id            = aws_vpc.base_project_VPC.id
   cidr_block        = var.cloud_subnet_cidr_block[count.index]
-  map_public_ip_on_launch = true
   availability_zone = data.aws_availability_zones.available.names[count.index]
 
   tags = {
@@ -28,6 +27,15 @@ resource "aws_security_group" "EC2_security_group" {
     description = "Allow all traffic throught HTTP"
     from_port   = "80"
     to_port     = "80"
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  # EC2 instances should be accessible anywhere on the internet via HTTP.
+  ingress {
+    description = "Allow all traffic throught HTTP"
+    from_port   = "8000"
+    to_port     = "8000"
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
@@ -108,3 +116,9 @@ resource "aws_eip" "geacco_EC2_eip" {
     Name = terraform.workspace == "stg" ? "geacco_EC2_iep_instance_stg" : "geacco_EC2_iep_instance_prod"
   }
 }
+
+# Run image in EC2
+# docker run -p 80:8000 app
+
+# sudo docker run -p 80:8000 388813176377.dkr.ecr.us-east-1.amazonaws.com/geacco_app_stg:latest
+# With port 8000 in the image
