@@ -71,33 +71,30 @@ resource "aws_key_pair" "geacco_app_kp" {
   public_key = file("geacco-app.pub")
 }
 
-data "aws_ami" "ubuntu" {
-  most_recent = "true"
+data "aws_ami" "ecs_ami" {
+  most_recent = true
+  owners      = ["amazon"]
+
   filter {
     name   = "name"
-    values = ["ubuntu/images/hvm-ssd/ubuntu-focal-20.04-amd64-server-*"]
+    values = ["amzn-ami-*-amazon-ecs-optimized"]
   }
-
-  filter {
-    name   = "virtualization-type"
-    values = ["hvm"]
-  }
-
-  owners = ["099720109477"]
 }
 
 # Connect to instance
 # ssh -i "geacco-app.pem" ubuntu@$(terraform output -raw web_public_dns)
+# With ecs optimized ami
+# ssh -i "geacco-app.pem" ec2-user@$(terraform output -raw web_public_dns)
 resource "aws_instance" "base_project_EC2_instance" {
-  count         = var.settings.web_app.count
-  ami           = data.aws_ami.ubuntu.id
-  instance_type = var.settings.web_app.instance_type
-  subnet_id     = aws_subnet.base_project_cloud_subnet[count.index].id
-  key_name      = aws_key_pair.geacco_app_kp.key_name
+  count                       = var.settings.web_app.count
+  ami                         = data.aws_ami.ecs_ami.id
+  instance_type               = var.settings.web_app.instance_type
+  subnet_id                   = aws_subnet.base_project_cloud_subnet[count.index].id
+  key_name                    = aws_key_pair.geacco_app_kp.key_name
   associate_public_ip_address = true //Will removed when address route 53
-  iam_instance_profile   = aws_iam_instance_profile.base_project_repository_intance_profile.name
-  vpc_security_group_ids = [aws_security_group.EC2_security_group.id]
-  user_data_base64       = filebase64("user_data.sh")
+  iam_instance_profile        = aws_iam_instance_profile.base_project_repository_intance_profile.name
+  vpc_security_group_ids      = [aws_security_group.EC2_security_group.id]
+  user_data_base64            = filebase64("user_data.sh")
 
   tags = {
     Name = terraform.workspace == "stg" ? "geacco_EC2_instance_stg" : "geacco_EC2_instance_prod"

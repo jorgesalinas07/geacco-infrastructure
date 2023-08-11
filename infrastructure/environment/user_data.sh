@@ -1,15 +1,36 @@
-# # Make sure we have all the latest updates when we launch this instance
-sudo apt update
+#!/bin/bash
+# Update all packages
 
-# Install aws cli
-sudo apt install unzip
-curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
-unzip awscliv2.zip
-sudo ./aws/install
+sudo yum update -y
+sudo yum install -y ecs-init
+sudo service docker start
+sudo start ecs
 
-#Adding cluster name in ecs config
 echo ECS_CLUSTER=base-project-ecs-cluster >> /etc/ecs/ecs.config
 cat /etc/ecs/ecs.config | grep "ECS_CLUSTER"
+
+# #!/bin/bash
+# sudo su
+# # yum update -y
+# yum install httpd -y
+# systemctl start httpd
+# systemctl enable httpd
+# echo 'Welcome to Instance' >> /var/www/html/index.html
+# sed -i 's/^PasswordAuthentication no/PasswordAuthentication yes/' /etc/ssh/sshd_config
+# systemctl restart sshd
+
+# # # Make sure we have all the latest updates when we launch this instance
+# sudo apt update
+
+# # Install aws cli
+# sudo apt install unzip
+# curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+# unzip awscliv2.zip
+# sudo ./aws/install
+
+# #Adding cluster name in ecs config
+# echo ECS_CLUSTER=base-project-ecs-cluster >> /etc/ecs/ecs.config
+# cat /etc/ecs/ecs.config | grep "ECS_CLUSTER"
 
 # # Install postgresql
 # sudo apt install postgresql postgresql-contrib ## Add y flag

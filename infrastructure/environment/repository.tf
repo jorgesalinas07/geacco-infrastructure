@@ -9,11 +9,13 @@ resource "aws_iam_instance_profile" "base_project_repository_intance_profile" {
 }
 
 resource "aws_iam_role_policy_attachment" "base_project_repository_attachment" {
+  count      = length(var.iam_policy_arn)
+  policy_arn = var.iam_policy_arn[count.index]
   role       = aws_iam_role.base_project_repository_role.name
-  policy_arn = "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"
 }
 
 resource "aws_iam_role" "base_project_repository_role" {
+  name               = "base-project-ec2-iam-role"
   path               = "/"
   assume_role_policy = <<EOF
 {

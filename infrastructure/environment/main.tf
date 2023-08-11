@@ -31,7 +31,8 @@ resource "aws_route_table_association" "base_project_route_table_association" {
 }
 
 provider "aws" {
-  region     = "us-west-2"
-  access_key = "AKIA3XBHVGNAN43PVITM"
-  secret_key = "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"
+  #region     = "us-west-2"
+  region = "us-east-1"
+  # access_key = "AKIA3XBHVGNAN43PVITM"
+  # secret_key = "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"
 }

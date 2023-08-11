@@ -5,15 +5,11 @@ resource "aws_security_group" "ALB_security_group" {
 
   // Allow all outgoing traffic in ALB
   egress {
-    description     = "Allow ALB traffic from the web only"
-    from_port       = "0"
-    to_port         = "0"
-    protocol        = "-1"
-    cidr_blocks      = ["0.0.0.0/0"]
-    ipv6_cidr_blocks = ["::/0"]
-    prefix_list_ids  = []
-    security_groups  = []
-    self             = false
+    description = "Allow all outbound traffic"
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
   }
 
   ingress {
@@ -62,14 +58,35 @@ resource "aws_lb_target_group" "base_project_alb_target_group" {
   target_type = "instance"
   protocol    = "HTTP"
   vpc_id      = aws_vpc.base_project_VPC.id
+
+  lifecycle { create_before_destroy=true }
+
+  # health_check {
+  #   path = "/api/1/resolve/default?path=/service/my-service"
+  #   port = 2001
+  #   healthy_threshold = 6
+  #   unhealthy_threshold = 2
+  #   timeout = 2
+  #   interval = 5
+  #   matcher = "200"  # has to be HTTP 200 or fails
+  # }
+
+  # health_check {
+  #   healthy_threshold   = "3"
+  #   interval            = "15"
+  #   path                = "/"
+  #   protocol            = "HTTP"
+  #   unhealthy_threshold = "10"
+  #   timeout             = "10"
+  # }
 }
 
-resource "aws_alb_target_group_attachment" "base_project_alb_attachment" {
-  count         = var.settings.web_app.count
-  target_group_arn = aws_lb_target_group.base_project_alb_target_group.arn
-  target_id        = aws_instance.base_project_EC2_instance[count.index].id
-  port        = 80
-}
+# resource "aws_alb_target_group_attachment" "base_project_alb_attachment" {
+#   count         = var.settings.web_app.count
+#   target_group_arn = aws_lb_target_group.base_project_alb_target_group.arn
+#   target_id        = aws_instance.base_project_EC2_instance[count.index].id
+#   port        = 80
+# }
 
 resource "aws_lb" "base_project_alb" { // NLB for database is missing
   name               = "geacco-ALB"
@@ -95,102 +112,147 @@ resource "aws_lb_listener" "base_project_alb_listener" {
   }
 }
 
-# resource "aws_lb_listener_rule" "base_project_alb_listener_rule" {
-#   listener_arn = aws_lb_listener.base_project_alb_listener.arn
-#   priority     = 100
+resource "aws_lb_listener_rule" "base_project_alb_listener_rule" {
+  listener_arn = aws_lb_listener.base_project_alb_listener.arn
+  priority     = 100
 
-#   action {
-#     type             = "forward"
-#     target_group_arn = aws_lb_target_group.base_project_alb_target_group.arn
+  action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.base_project_alb_target_group.arn
+  }
 
-#   }
+  condition {
+    source_ip {
+      values = ["18.204.41.246/32"]
+    }
+  }
+}
 
-#   condition {
-#     path_pattern {
-#       values = ["/var/www/html/index.html"]
+# data "aws_iam_policy_document" "base_project_ecs_policy" {
+#   statement {
+#     actions = ["sts:AssumeRole"]
+
+#     principals {
+#       type        = "Service"
+#       identifiers = ["ec2.amazonaws.com"]
 #     }
 #   }
 # }
 
-data "aws_iam_policy_document" "base_project_ecs_policy" {
+# resource "aws_iam_role" "base_project_ecs_iam_role" {
+#   name               = "base-project-ecs-iam-role"
+#   assume_role_policy = data.aws_iam_policy_document.base_project_ecs_policy.json
+# }
+
+
+# resource "aws_iam_role_policy_attachment" "base_project_ecs_role_policy_attachment" {
+#   role       = aws_iam_role.base_project_ecs_iam_role.name
+#   #policy_arn = "arn:aws:iam::aws:policy/AmazonEC2ContainerServiceforEC2Role"
+#   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonEC2ContainerServiceforEC2Role"
+# }
+
+# resource "aws_iam_instance_profile" "base_project_ecs_iam_profile" {
+#   name = "base-project-ecs-iam-role"
+#   role = aws_iam_role.base_project_ecs_iam_role.name
+# }
+
+# resource "aws_launch_configuration" "base_project_ecs_launch_config" {
+#     image_id      = data.aws_ami.ecs_ami.id
+#     # image_id             = "ami-094d4d00fd7462815" //Change to variable to ubuntu
+#     iam_instance_profile = aws_iam_instance_profile.base_project_ecs_iam_profile.name
+#     security_groups      = [aws_security_group.EC2_security_group.id]
+#     #user_data            = "#!/bin/bash\necho ECS_CLUSTER=base-project-ecs-cluster >> /etc/ecs/ecs.config"
+#     user_data_base64       = filebase64("user_data2.sh")
+#     instance_type        = var.settings.web_app.instance_type
+# }
+
+# resource "aws_autoscaling_group" "base_project_autoscaling_group" {
+#     name                      = "base_project_autoscaling_group"
+#     # vpc_zone_identifier       = [aws_subnet.pub_subnet.id]
+#     vpc_zone_identifier = [for subnet in aws_subnet.base_project_cloud_subnet : subnet.id]
+#     launch_configuration      = aws_launch_configuration.base_project_ecs_launch_config.name
+
+#     desired_capacity          = 2
+#     min_size                  = 1
+#     max_size                  = 10
+#     health_check_grace_period = 300
+#     health_check_type         = "EC2"
+# }
+
+resource "aws_ecs_cluster" "base_project_ecs_cluster" {
+  name = "base-project-ecs-cluster"
+}
+
+resource "aws_ecs_task_definition" "base_project_ecs_task_definition" {
+  family                   = "base_project_image"
+  network_mode             = "bridge"
+  execution_role_arn       = aws_iam_role.base_project_ecs_execution_iam_role.arn
+  requires_compatibilities = ["EC2"]
+  container_definitions = jsonencode([
+    {
+      essential   = true
+      memory      = 512
+      name        = "base_project_image"
+      cpu         = 2
+      image       = "${var.REPOSITORY_URL}:${var.IMAGE_TAG}"
+      environment = []
+      portMappings = [
+        {
+          containerPort = 8000,
+          hostPort      = 80,
+          protocol      = "tcp"
+        }
+      ]
+      # logConfiguration = {
+      #     logDriver = "awslogs",
+      #     options = {
+      #       awslogs-group = "base_project_image_logs",
+      #       awslogs-create-group = "true", //Not taken as bool
+      #       awslogs-region = "us-east-1",
+      #       awslogs-stream-prefix = "ecs",
+      #     }
+      # },
+    }
+  ])
+}
+
+
+
+
+resource "aws_iam_role" "base_project_ecs_execution_iam_role" {
+  name               = "base_project_ecs_task_role"
+  assume_role_policy = data.aws_iam_policy_document.ecs_tasks_execution_role.json
+}
+
+
+resource "aws_iam_role_policy_attachment" "base_project_ecs_task_role_policy_attachment" {
+  count = length(var.iam_policy_arn_task_ecs)
+  role  = aws_iam_role.base_project_ecs_execution_iam_role.name
+  #policy_arn = "arn:aws:iam::aws:policy/AmazonEC2ContainerServiceforEC2Role"
+  #policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
+  policy_arn = var.iam_policy_arn_task_ecs[count.index]
+}
+
+data "aws_iam_policy_document" "ecs_tasks_execution_role" {
   statement {
     actions = ["sts:AssumeRole"]
 
     principals {
       type        = "Service"
-      identifiers = ["ec2.amazonaws.com"]
+      identifiers = ["ecs-tasks.amazonaws.com"]
     }
   }
 }
 
-resource "aws_iam_role" "base_project_ecs_iam_role" {
-  name               = "base-project-ecs-iam-role"
-  assume_role_policy = data.aws_iam_policy_document.base_project_ecs_policy.json
-}
-
-
-resource "aws_iam_role_policy_attachment" "base_project_ecs_role_policy_attachment" {
-  role       = aws_iam_role.base_project_ecs_iam_role.name
-  #policy_arn = "arn:aws:iam::aws:policy/AmazonEC2ContainerServiceforEC2Role"
-  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonEC2ContainerServiceforEC2Role"
-}
-
-resource "aws_iam_instance_profile" "base_project_ecs_iam_profile" {
-  name = "base-project-ecs-iam-role"
-  role = aws_iam_role.base_project_ecs_iam_role.name
-}
-
-resource "aws_launch_configuration" "base_project_ecs_launch_config" {
-    image_id      = data.aws_ami.ubuntu.id
-    # image_id             = "ami-094d4d00fd7462815" //Change to variable to ubuntu
-    iam_instance_profile = aws_iam_instance_profile.base_project_ecs_iam_profile.name
-    security_groups      = [aws_security_group.EC2_security_group.id]
-    user_data            = "#!/bin/bash\necho ECS_CLUSTER=base-project-ecs-cluster >> /etc/ecs/ecs.config"
-    instance_type        = var.settings.web_app.instance_type
-}
-
-resource "aws_autoscaling_group" "base_project_autoscaling_group" {
-    name                      = "base_project_autoscaling_group"
-    # vpc_zone_identifier       = [aws_subnet.pub_subnet.id]
-    vpc_zone_identifier = [for subnet in aws_subnet.base_project_cloud_subnet : subnet.id]
-    launch_configuration      = aws_launch_configuration.base_project_ecs_launch_config.name
-
-    desired_capacity          = 2
-    min_size                  = 1
-    max_size                  = 10
-    health_check_grace_period = 300
-    health_check_type         = "EC2"
-}
-
-resource "aws_ecs_cluster" "base_project_ecs_cluster" {
-    name  = "base-project-ecs-cluster"
-}
-
-resource "aws_ecs_task_definition" "base_project_ecs_task_definition" {
-  family                = "base_project_image"
-  container_definitions = jsonencode([
-    {
-      essential = true
-      memory    = 512
-      name      = "base_project_image"
-      cpu       = 2
-      image     = "${var.REPOSITORY_URL}:${var.IMAGE_TAG}"
-      environment = []
-      portMappings = [
-        {
-          containerPort = 8000,
-          hostPort      = 80
-        }
-      ]
-    }
-  ])
-}
-
 resource "aws_ecs_service" "base_project_ecs_service" {
-  name            = "base_project_ecs_service"
-  cluster         = aws_ecs_cluster.base_project_ecs_cluster.id
-  task_definition = aws_ecs_task_definition.base_project_ecs_task_definition.arn
-  desired_count   = 2
+  depends_on           = [aws_lb_listener.base_project_alb_listener]
+  name                 = "base_project_ecs_service"
+  launch_type          = "EC2"
+  cluster              = aws_ecs_cluster.base_project_ecs_cluster.id
+  force_new_deployment = true
+  task_definition      = aws_ecs_task_definition.base_project_ecs_task_definition.arn
+  #desired_count   = 2
+  desired_count = 1
 
   load_balancer {
     target_group_arn = aws_lb_target_group.base_project_alb_target_group.arn
