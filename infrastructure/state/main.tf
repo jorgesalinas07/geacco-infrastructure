@@ -19,9 +19,7 @@
 # }
 
 provider "aws" {
-  region     = "us-west-2"
-  access_key = "AKIA3XBHVGNAN43PVITM"
-  secret_key = "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"
+  #region     = "us-west-2"
 }
 
 resource "aws_s3_bucket" "project_terraform_state" {

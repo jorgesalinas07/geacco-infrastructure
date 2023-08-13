@@ -54,22 +54,22 @@ resource "aws_security_group" "ALB_security_group" {
 
 resource "aws_lb_target_group" "base_project_alb_target_group" {
   name        = "geacco-alb-target-group"
-  port        = 80
-  target_type = "instance"
+  port        = 8001
+  target_type = "ip"
   protocol    = "HTTP"
   vpc_id      = aws_vpc.base_project_VPC.id
 
   lifecycle { create_before_destroy=true }
 
-  # health_check {
+  health_check {
   #   path = "/api/1/resolve/default?path=/service/my-service"
-  #   port = 2001
+    port = 8001
   #   healthy_threshold = 6
   #   unhealthy_threshold = 2
   #   timeout = 2
   #   interval = 5
   #   matcher = "200"  # has to be HTTP 200 or fails
-  # }
+  }
 
   # health_check {
   #   healthy_threshold   = "3"
@@ -101,32 +101,37 @@ resource "aws_lb_listener" "base_project_alb_listener" {
   port              = "80"
   protocol          = "HTTP"
 
+  # default_action {
+  #   type = "redirect"
+
+  #   redirect {
+  #     port        = "443"
+  #     protocol    = "HTTPS"
+  #     status_code = "HTTP_301"
+  #   }
+  # }
+
   default_action {
-    type = "redirect"
-
-    redirect {
-      port        = "443"
-      protocol    = "HTTPS"
-      status_code = "HTTP_301"
-    }
-  }
-}
-
-resource "aws_lb_listener_rule" "base_project_alb_listener_rule" {
-  listener_arn = aws_lb_listener.base_project_alb_listener.arn
-  priority     = 100
-
-  action {
+    target_group_arn = "${aws_lb_target_group.base_project_alb_target_group.id}"
     type             = "forward"
-    target_group_arn = aws_lb_target_group.base_project_alb_target_group.arn
-  }
-
-  condition {
-    source_ip {
-      values = ["18.204.41.246/32"]
-    }
   }
 }
+
+# resource "aws_lb_listener_rule" "base_project_alb_listener_rule" {
+#   listener_arn = aws_lb_listener.base_project_alb_listener.arn
+#   priority     = 100
+
+#   action {
+#     type             = "forward"
+#     target_group_arn = aws_lb_target_group.base_project_alb_target_group.arn
+#   }
+
+#   condition {
+#     source_ip {
+#       values = ["18.204.41.246/32"]
+#     }
+#   }
+# }
 
 # data "aws_iam_policy_document" "base_project_ecs_policy" {
 #   statement {
@@ -185,33 +190,36 @@ resource "aws_ecs_cluster" "base_project_ecs_cluster" {
 
 resource "aws_ecs_task_definition" "base_project_ecs_task_definition" {
   family                   = "base_project_image"
-  network_mode             = "bridge"
+  network_mode             = "awsvpc"
   execution_role_arn       = aws_iam_role.base_project_ecs_execution_iam_role.arn
   requires_compatibilities = ["EC2"]
+  # memory                   = "1024"
+  # cpu                      = "512"
   container_definitions = jsonencode([
     {
       essential   = true
-      memory      = 512
+      memory      = 256
       name        = "base_project_image"
-      cpu         = 2
+      cpu         = 256
+      # entryPoint = ["/"],
       image       = "${var.REPOSITORY_URL}:${var.IMAGE_TAG}"
       environment = []
       portMappings = [
         {
-          containerPort = 8000,
-          hostPort      = 80,
+          containerPort = 8001,
+          hostPort      = 8001,
           protocol      = "tcp"
         }
       ]
-      # logConfiguration = {
-      #     logDriver = "awslogs",
-      #     options = {
-      #       awslogs-group = "base_project_image_logs",
-      #       awslogs-create-group = "true", //Not taken as bool
-      #       awslogs-region = "us-east-1",
-      #       awslogs-stream-prefix = "ecs",
-      #     }
-      # },
+      logConfiguration = {
+          logDriver = "awslogs",
+          options = {
+            awslogs-group = "base_project_image_logs",
+            awslogs-create-group = "true", //Not taken as bool
+            awslogs-region = "us-east-1",
+            awslogs-stream-prefix = "ecs",
+          }
+      },
     }
   ])
 }
@@ -247,16 +255,58 @@ data "aws_iam_policy_document" "ecs_tasks_execution_role" {
 resource "aws_ecs_service" "base_project_ecs_service" {
   depends_on           = [aws_lb_listener.base_project_alb_listener]
   name                 = "base_project_ecs_service"
+  #deployment_circuit_breaker Add this later
+
   launch_type          = "EC2"
   cluster              = aws_ecs_cluster.base_project_ecs_cluster.id
   force_new_deployment = true
   task_definition      = aws_ecs_task_definition.base_project_ecs_task_definition.arn
   #desired_count   = 2
-  desired_count = 1
+  desired_count = 2
+  deployment_maximum_percent = 100
+  deployment_minimum_healthy_percent = 50
 
   load_balancer {
     target_group_arn = aws_lb_target_group.base_project_alb_target_group.arn
     container_name   = "base_project_image"
-    container_port   = 8000
+    container_port   = 8001
+  }
+
+  network_configuration {
+    subnets            = [for subnet in aws_subnet.base_project_cloud_subnet : subnet.id]
+    #assign_public_ip = true // Might not be neccesary
+    security_groups = [aws_security_group.ECS_security_group.id]
+  }
+}
+
+resource "aws_security_group" "ECS_security_group" {
+  name        = terraform.workspace == "stg" ? "ECS_security_group_stg" : "ECS_security_group_prod"
+  description = "A security group for the ECS"
+  vpc_id      = aws_vpc.base_project_VPC.id
+
+
+  # EC2 instances should be accessible anywhere on the internet via HTTP.
+  ingress {
+    description = "Allow all traffic throught HTTP"
+    from_port   = "8001"
+    to_port     = "8001"
+    protocol    = "tcp"
+    #cidr_blocks = ["0.0.0.0/0"]
+    security_groups = [
+      "${aws_security_group.ALB_security_group.id}",
+    ]
+  }
+
+  // Allow all outgoing traffic in ALB
+  egress {
+    description = "Allow all outbound traffic"
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    Name = terraform.workspace == "stg" ? "geacco_app_ecs_security_group_stg" : "geacco_app_ecs_security_group_prod"
   }
 }

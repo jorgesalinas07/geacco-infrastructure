@@ -22,7 +22,7 @@ resource "aws_security_group" "EC2_security_group" {
   description = "A security group for the EC2 instance"
   vpc_id      = aws_vpc.base_project_VPC.id
 
-  # EC2 instances should be accessible anywhere on the internet via HTTP.
+  # EC2 instances should be accessible anywhere on the internet via HTTP. // Check if add only ALB security group here
   ingress {
     description = "Allow all traffic throught HTTP"
     from_port   = "80"

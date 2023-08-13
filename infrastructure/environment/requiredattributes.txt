@@ -1,0 +1,78 @@
+{
+    "taskDefinition": {
+        "taskDefinitionArn": "arn:aws:ecs:us-east-1:805389546304:task-definition/base_project_image:39",
+        "containerDefinitions": [
+            {
+                "name": "base_project_image",
+                "image": "805389546304.dkr.ecr.us-east-1.amazonaws.com/geacco_app_stg:latest3",
+                "cpu": 256,
+                "memory": 256,
+                "portMappings": [
+                    {
+                        "containerPort": 80,
+                        "hostPort": 80,
+                        "protocol": "tcp",
+                        "name": "base_project_image-80-tcp",
+                        "appProtocol": "http"
+                    }
+                ],
+                "essential": true,
+                "environment": [],
+                "mountPoints": [],
+                "volumesFrom": [],
+                "logConfiguration": {
+                    "logDriver": "awslogs",
+                    "options": {
+                        "awslogs-create-group": "true",
+                        "awslogs-group": "base_project_image_logs",
+                        "awslogs-region": "us-east-1",
+                        "awslogs-stream-prefix": "ecs"
+                    },
+                    "secretOptions": []
+                }
+            }
+        ],
+        "family": "base_project_image",
+        "executionRoleArn": "arn:aws:iam::805389546304:role/base_project_ecs_task_role",
+        "networkMode": "awsvpc",
+        "revision": 39,
+        "volumes": [],
+        "status": "ACTIVE",
+        "requiresAttributes": [
+            {
+                "name": "com.amazonaws.ecs.capability.logging-driver.awslogs"
+            },
+            {
+                "name": "ecs.capability.execution-role-awslogs"
+            },
+            {
+                "name": "com.amazonaws.ecs.capability.ecr-auth"
+            },
+            {
+                "name": "com.amazonaws.ecs.capability.docker-remote-api.1.19"
+            },
+            {
+                "name": "ecs.capability.execution-role-ecr-pull"
+            },
+            {
+                "name": "com.amazonaws.ecs.capability.docker-remote-api.1.18"
+            },
+            {
+                "name": "ecs.capability.task-eni"
+            },
+            {
+                "name": "com.amazonaws.ecs.capability.docker-remote-api.1.29"
+            }
+        ],
+        "placementConstraints": [],
+        "compatibilities": [
+            "EC2"
+        ],
+        "requiresCompatibilities": [
+            "EC2"
+        ],
+        "registeredAt": "2023-08-13T08:37:48.802000-05:00",
+        "registeredBy": "arn:aws:iam::805389546304:user/jorge.salinas"
+    },
+    "tags": []
+}

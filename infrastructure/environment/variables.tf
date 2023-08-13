@@ -38,7 +38,7 @@ variable "settings" {
     },
     "web_app" = {
       count         = 1
-      instance_type = "t2.micro"
+      instance_type = "t2.medium"
     }
   }
 }
@@ -95,5 +95,6 @@ variable "iam_policy_arn_task_ecs" {
     "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly",
     "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy",
     "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryPowerUser",
+    "arn:aws:iam::aws:policy/CloudWatchLogsFullAccess",
   ]
 }
