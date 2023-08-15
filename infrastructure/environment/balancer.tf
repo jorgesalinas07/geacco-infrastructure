@@ -58,16 +58,19 @@ resource "aws_lb_target_group" "base_project_alb_target_group" {
   target_type = "ip"
   protocol    = "HTTP"
   vpc_id      = aws_vpc.base_project_VPC.id
+  deregistration_delay = 5// Not so sure
 
   lifecycle { create_before_destroy=true }
 
   health_check {
   #   path = "/api/1/resolve/default?path=/service/my-service"
     port = 8001
-  #   healthy_threshold = 6
+    path = "/docs"
+    healthy_threshold = 2 // Not so sure
   #   unhealthy_threshold = 2
   #   timeout = 2
-  #   interval = 5
+    interval = 5// Not so sure
+    timeout = 2// Not so sure
   #   matcher = "200"  # has to be HTTP 200 or fails
   }
 
@@ -167,8 +170,40 @@ resource "aws_lb_listener" "base_project_alb_listener" {
 #     iam_instance_profile = aws_iam_instance_profile.base_project_ecs_iam_profile.name
 #     security_groups      = [aws_security_group.EC2_security_group.id]
 #     #user_data            = "#!/bin/bash\necho ECS_CLUSTER=base-project-ecs-cluster >> /etc/ecs/ecs.config"
-#     user_data_base64       = filebase64("user_data2.sh")
+#     #user_data_base64       = filebase64("user_data2.sh")
+#     user_data_base64            = filebase64("user_data.sh")
 #     instance_type        = var.settings.web_app.instance_type
+# }
+
+# resource "aws_autoscaling_group" "base_project_autoscaling_group" {
+#     depends_on = [
+#       aws_lb.base_project_alb,
+#     ]
+#     health_check_grace_period = 120 // Might be too little or much
+#     lifecycle {
+#       create_before_destroy = true
+#     }
+#     # target_group_arns = [
+#     #   aws_lb_target_group.base_project_alb_target_group.arn,
+#     # ]
+
+#     name                      = "base_project_autoscaling_group"
+#     desired_capacity          = "2"
+#     # vpc_zone_identifier       = [aws_subnet.pub_subnet.id]
+#     vpc_zone_identifier = [for subnet in aws_subnet.base_project_cloud_subnet : subnet.id] //Change to only work with one zone
+#     //  vpc_zone_identifier = [aws_subnet.base_project_cloud_subnet[0].id]
+#     launch_configuration      = aws_launch_configuration.base_project_ecs_launch_config.name
+
+#     termination_policies = [
+#       "OldestInstance",
+#       "OldestLaunchConfiguration",
+#     ]
+
+
+#     min_size                  = 2
+#     max_size                  = 6
+#     #health_check_grace_period = 300
+#     health_check_type         = "ELB"
 # }
 
 # resource "aws_autoscaling_group" "base_project_autoscaling_group" {
@@ -178,9 +213,9 @@ resource "aws_lb_listener" "base_project_alb_listener" {
 #     launch_configuration      = aws_launch_configuration.base_project_ecs_launch_config.name
 
 #     desired_capacity          = 2
-#     min_size                  = 1
+#     min_size                  = 2
 #     max_size                  = 10
-#     health_check_grace_period = 300
+#     health_check_grace_period = 120
 #     health_check_type         = "EC2"
 # }
 
@@ -263,7 +298,7 @@ resource "aws_ecs_service" "base_project_ecs_service" {
   task_definition      = aws_ecs_task_definition.base_project_ecs_task_definition.arn
   #desired_count   = 2
   desired_count = 2
-  deployment_maximum_percent = 100
+  deployment_maximum_percent = 150
   deployment_minimum_healthy_percent = 50
 
   load_balancer {

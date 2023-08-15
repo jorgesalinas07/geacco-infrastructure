@@ -38,7 +38,8 @@ variable "settings" {
     },
     "web_app" = {
       count         = 1
-      instance_type = "t2.medium"
+      #instance_type = "t2.medium"
+      instance_type = "t3.xlarge"
     }
   }
 }
