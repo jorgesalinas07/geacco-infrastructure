@@ -36,7 +36,16 @@ resource "aws_security_group" "RDS_security_group" {
     from_port       = 5432
     to_port         = 5432
     protocol        = "tcp"
-    security_groups = [aws_security_group.EC2_security_group.id]
+    security_groups = [aws_security_group.EC2_security_group.id, aws_security_group.ECS_security_group.id]
+  }
+
+  // Allow all outgoing traffic in ALB
+  egress {
+    description = "Allow all outbound traffic"
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
   }
 
   tags = {

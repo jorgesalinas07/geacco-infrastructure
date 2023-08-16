@@ -239,6 +239,7 @@ resource "aws_ecs_task_definition" "base_project_ecs_task_definition" {
       # entryPoint = ["/"],
       image       = "${var.REPOSITORY_URL}:${var.IMAGE_TAG}"
       environment = []
+      #command = ["alembic upgrade head"]
       portMappings = [
         {
           containerPort = 8001,
