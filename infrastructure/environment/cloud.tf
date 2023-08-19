@@ -28,7 +28,7 @@ resource "aws_security_group" "EC2_security_group" {
     from_port   = "80"
     to_port     = "80"
     protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
+    cidr_blocks = ["0.0.0.0/0"] //Add EC2 security group
   }
 
   # EC2 instances should be accessible anywhere on the internet via HTTP.
@@ -48,6 +48,15 @@ resource "aws_security_group" "EC2_security_group" {
     protocol    = "tcp"
     cidr_blocks = ["${var.my_ip}/32"]
   }
+
+  # # EC2 instances should be accessible from Redis.
+  # ingress {
+  #   description = "Allow all traffic for Redis"
+  #   from_port   = "6379"
+  #   to_port     = "6379"
+  #   protocol    = "tcp"
+  #   cidr_blocks = ["0.0.0.0/0"]
+  # }
 
   // Allowing all outbound traffic
   egress {
@@ -81,6 +90,19 @@ data "aws_ami" "ecs_ami" {
   }
 }
 
+# data "aws_ami" "ecs_ami" {
+#   most_recent = "true"
+#   filter {
+#     name   = "name"
+#     values = ["ubuntu/images/hvm-ssd/ubuntu-focal-20.04-amd64-server-*"]
+#   }
+#   filter {
+#     name   = "virtualization-type"
+#     values = ["hvm"]
+#   }
+#   owners = ["099720109477"]
+# }
+
 # Connect to instance
 # ssh -i "geacco-app.pem" ubuntu@$(terraform output -raw web_public_dns)
 # With ecs optimized ami
@@ -106,6 +128,7 @@ resource "aws_eip" "geacco_EC2_eip" {
   count = var.settings.web_app.count
 
   instance = aws_instance.base_project_EC2_instance[count.index].id
+  #instance = "i-0762e68ee40aeb876"
 
   vpc = true
 

@@ -16,6 +16,7 @@ variable "subnet_count" {
   default = {
     db_private    = 2 // Deployment requirement
     cloud_private = 2 // In case one of the subnets goes down for whatever reason, your site is still up and running
+    EC_private = 2
   }
 }
 
@@ -75,6 +76,17 @@ variable "db_subnet_cidr_block" {
     "10.0.6.0/24",
     "10.0.7.0/24",
     "10.0.8.0/24"
+  ]
+}
+
+variable "EC_subnet_cidr_block" {
+  description = "Available CIDR blocks for subnets"
+  type        = list(string)
+  default = [
+    "10.0.9.0/24",
+    "10.0.10.0/24",
+    "10.0.11.0/24",
+    "10.0.12.0/24"
   ]
 }
 
