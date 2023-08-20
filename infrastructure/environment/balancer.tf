@@ -67,12 +67,13 @@ resource "aws_lb_target_group" "base_project_alb_target_group" {
     port = 8001
     #path = "/"
     path = "/health"
+    #path = "/admin"
     healthy_threshold = 2 // Not so sure
   #   unhealthy_threshold = 2
   #   timeout = 2
     interval = 5// Not so sure
     timeout = 2// Not so sure
-  #   matcher = "200"  # has to be HTTP 200 or fails
+    matcher = "200,301"  # has to be HTTP 200 or fails
   }
 
   # health_check {
@@ -148,6 +149,10 @@ resource "aws_ecs_task_definition" "base_project_ecs_task_definition" {
   requires_compatibilities = ["EC2"]
   # memory                   = "1024"
   # cpu                      = "512"
+  volume {
+              name = "socket_volume"
+          }
+
   container_definitions = jsonencode([
     {
       essential   = true
@@ -191,19 +196,86 @@ resource "aws_ecs_task_definition" "base_project_ecs_task_definition" {
       }
     ],
       #command = ["alembic", "upgrade", "head"]
+      #command = ["python3", "manage.py", "migrate"]
+      command = ["python3", "manage.py", "cities_light"]
       #command = ["make", "setup_environment"]
       #command = ["make", "test_sh"]
       #command = ["export", "DATABASE_URL=postgres://geaccousername:password@geaccodbprod.ciutmnlgyney.us-east-1.rds.amazonaws.com:5432/geacco_db_prod"],
-      # mountPoints = [
-      #   {
-      #     sourceVolume  = "app_volume",  # Create a volume in your ECS task definition
-      #     containerPath = "/app"
-      #   },
-      #   {
-      #     sourceVolume  = "static_volume",  # Create a volume in your ECS task definition
-      #     containerPath = "/app/static"
-      #   }
-      # ],
+      mountPoints = [
+          {
+              "sourceVolume": "socket_volume",
+              "containerPath": "/app/run",
+              "readOnly": false
+          }
+      ],
+      portMappings = [
+        {
+          containerPort = 8002,
+          hostPort      = 8002,
+          protocol      = "tcp"
+        }
+      ]
+      logConfiguration = {
+          logDriver = "awslogs",
+          options = {
+            awslogs-group = "base_project_image_logs",
+            awslogs-create-group = "true", //Not taken as bool
+            awslogs-region = "us-east-1",
+            awslogs-stream-prefix = "ecs",
+          }
+      },
+    },
+    {
+      essential   = true
+      memory      = 256
+      name        = "base_project_ngix_image"
+      cpu         = 256
+      # entryPoint = ["/"],
+      image       = "${var.REPOSITORY_URL_NGINX}:${var.IMAGE_TAG_NGINX}"
+    #   environment = [
+    #   {
+    #     name  = "DEBUG",
+    #     value = "on"
+    #   },
+    #   # {
+    #   #   name  = "DATABASE_URL",
+    #   #   value = "postgres://geaccousername:password@geaccodbprod.cg0exh01flwc.us-east-1.rds.amazonaws.com:5432/geacco_db_prod"
+    #   # },
+    #   {
+    #     name  = "DATABASE_URL",
+    #     value = "postgres://geaccousername:password@${aws_db_instance.geacco_db_instance.address}:${aws_db_instance.geacco_db_instance.port}/${aws_db_instance.geacco_db_instance.db_name}" //Change to secret manager
+    #   },
+    #   {
+    #     name  = "SECRET_KEY",
+    #     value = "0h7@rhy%nzmm*6rjz--%631e4tqji@m9q-tk@c!2fdir%vu9y-" //Change to secret manager
+    #   },
+    #   # {
+    #   #   name  = "REDIS_URL",
+    #   #   value = "redis://redis-cluster.cpeuty.ng.0001.use1.cache.amazonaws.com:6379/0"
+    #   # },
+    #   {
+    #     name  = "REDIS_URL",
+    #     value = "redis://${aws_elasticache_replication_group.base_project_EC_replication_group.primary_endpoint_address}:6379/0"
+    #   },
+    #   {
+    #     name  = "POSTGRES_PASSWORD",
+    #     value = "password" //Change to secrets manager
+    #   },
+    #   {
+    #     name  = "ENV",
+    #     value = "build"
+    #   }
+    # ],
+      #command = ["alembic", "upgrade", "head"]
+      #command = ["make", "setup_environment"]
+      #command = ["make", "test_sh"]
+      #command = ["export", "DATABASE_URL=postgres://geaccousername:password@geaccodbprod.ciutmnlgyney.us-east-1.rds.amazonaws.com:5432/geacco_db_prod"],
+      volumesFrom = [
+      {
+          sourceContainer = "base_project_image",
+          readOnly = false
+      }
+      ]
       portMappings = [
         {
           containerPort = 8001,
@@ -214,7 +286,7 @@ resource "aws_ecs_task_definition" "base_project_ecs_task_definition" {
       logConfiguration = {
           logDriver = "awslogs",
           options = {
-            awslogs-group = "base_project_image_logs",
+            awslogs-group = "base_project_nginx_image_logs",
             awslogs-create-group = "true", //Not taken as bool
             awslogs-region = "us-east-1",
             awslogs-stream-prefix = "ecs",
@@ -250,6 +322,31 @@ data "aws_iam_policy_document" "ecs_tasks_execution_role" {
       identifiers = ["ecs-tasks.amazonaws.com"]
     }
   }
+
+  statement {
+    actions = ["sts:AssumeRole"]
+
+    principals {
+      type        = "Service"
+      identifiers = ["ecs-tasks.amazonaws.com"]
+    }
+
+    condition {
+      test     = "StringEquals"
+      variable = "sts:ExternalId"
+      values   = [
+        "ecs.capability.ecr-auth",
+        "ecs.capability.execution-role-ecr-pull",
+        "ecs.capability.docker-remote-api.1.18",
+        "ecs.capability.task-eni",
+        "ecs.capability.docker-remote-api.1.29",
+        "ecs.capability.logging-driver.awslogs",
+        "ecs.capability.execution-role-awslogs",
+        "ecs.capability.docker-remote-api.1.19",
+        "ecs.capability.task-iam-role"
+      ]
+    }
+  }
 }
 
 resource "aws_ecs_service" "base_project_ecs_service" {
@@ -268,7 +365,8 @@ resource "aws_ecs_service" "base_project_ecs_service" {
 
   load_balancer {
     target_group_arn = aws_lb_target_group.base_project_alb_target_group.arn
-    container_name   = "base_project_image"
+    #container_name   = "base_project_image"
+    container_name   = "base_project_ngix_image"
     container_port   = 8001
   }
 

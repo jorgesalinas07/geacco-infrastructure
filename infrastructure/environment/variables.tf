@@ -4,6 +4,18 @@ variable "IMAGE_TAG" {
   default     = "latest"
 }
 
+variable "REPOSITORY_URL_NGINX" {
+  description = "ECR Image tag"
+  type        = string
+  default     = "latest"
+}
+
+variable "IMAGE_TAG_NGINX" {
+  description = "ECR Image tag"
+  type        = string
+  default     = "latest"
+}
+
 variable "REPOSITORY_URL" {
   description = "ECR Image tag"
   type        = string
@@ -98,7 +110,10 @@ variable "aws_region" {
 variable "iam_policy_arn" {
   description = "IAM Policy to be attached to role"
   type        = list(string)
-  default     = ["arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly", "arn:aws:iam::aws:policy/service-role/AmazonEC2ContainerServiceforEC2Role"]
+  default     = [
+    "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly",
+    "arn:aws:iam::aws:policy/service-role/AmazonEC2ContainerServiceforEC2Role"
+  ]
 }
 
 variable "iam_policy_arn_task_ecs" {

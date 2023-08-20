@@ -3,6 +3,11 @@ module "base_project_ECR" {
   ecr_name = terraform.workspace == "stg" ? "geacco_app_stg" : "geacco_app_prod"
 }
 
+module "base_project_ECR_nginx" {
+  source   = "../common/ecr"
+  ecr_name = terraform.workspace == "stg" ? "geacco_app_nginx_stg" : "geacco_app_nginx_prod"
+}
+
 // Instance profile
 resource "aws_iam_instance_profile" "base_project_repository_intance_profile" {
   role = aws_iam_role.base_project_repository_role.name
