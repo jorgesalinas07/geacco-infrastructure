@@ -30,7 +30,7 @@ variable "db_name" {
 }
 
 variable "ingress_security_groups" {
-  type        = list(any)
+  type        = list
   description = "list of security groups with access to the db"
 }
 
