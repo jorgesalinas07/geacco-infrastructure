@@ -1,5 +1,5 @@
 resource "aws_security_group" "this" {
-  count = var.create_security_group ? 1 : 0
+  count       = var.create_security_group ? 1 : 0
   name        = terraform.workspace == "stg" ? "${var.security_group_name}_stg" : "${var.security_group_name}_prod"
   description = var.security_group_description
   vpc_id      = var.vpc_id
@@ -54,22 +54,22 @@ resource "aws_security_group" "this" {
 }
 
 resource "aws_lb_target_group" "this" {
-  count = var.create_lb_target_group ? 1 : 0
-  name        = var.lb_target_group_name
-  port        = var.lb_target_group_port
-  target_type = var.lb_target_group_target_type
-  protocol    = var.lb_target_group_target_protocol
-  vpc_id      = var.vpc_id
+  count                = var.create_lb_target_group ? 1 : 0
+  name                 = var.lb_target_group_name
+  port                 = var.lb_target_group_port
+  target_type          = var.lb_target_group_target_type
+  protocol             = var.lb_target_group_target_protocol
+  vpc_id               = var.vpc_id
   deregistration_delay = var.deregistration_delay
 
-  lifecycle { create_before_destroy=true }
+  lifecycle { create_before_destroy = true }
 
   health_check {
-    port = var.lb_target_group_port
-    path = var.lb_target_group_health_check_path
+    port              = var.lb_target_group_port
+    path              = var.lb_target_group_health_check_path
     healthy_threshold = var.lb_target_group_health_check_healthy_threshold
-    interval = var.lb_target_group_health_check_interval
-    timeout = var.lb_target_group_health_check_timeout
+    interval          = var.lb_target_group_health_check_interval
+    timeout           = var.lb_target_group_health_check_timeout
   }
 
 }
@@ -95,7 +95,7 @@ resource "aws_lb_listener" "this" {
   protocol          = var.lb_listener_protocol
 
   default_action {
-    target_group_arn = "${aws_lb_target_group.this.id}"
+    target_group_arn = aws_lb_target_group.this.id
     type             = "forward"
   }
 }

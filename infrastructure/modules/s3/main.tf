@@ -24,7 +24,7 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "this" {
 }
 
 resource "aws_security_group" "this" {
-  count = var.create_security_group ? 1 : 0
+  count       = var.create_security_group ? 1 : 0
   name        = terraform.workspace == "stg" ? "${var.bucket_security_group_name}_stg" : "${var.bucket_security_group_name}_prod"
   description = "A security group for the S3 database"
   vpc_id      = var.bucket_security_vpc_id
@@ -43,13 +43,13 @@ resource "aws_security_group" "this" {
 }
 
 resource "aws_vpc_endpoint" "this" {
-  count = var.create_security_group ? 1 : 0
+  count        = var.create_security_group ? 1 : 0
   vpc_id       = var.bucket_security_group_vpc_id
   service_name = "com.amazonaws.${var.aws_region}.s3"
 }
 
 resource "aws_vpc_endpoint_route_table_association" "base_project_bucket_endpoint_route_table_association" {
-  count = var.create_endpoint_route_table ? 1 : 0
+  count           = var.create_endpoint_route_table ? 1 : 0
   route_table_id  = var.endpoint_route_table
   vpc_endpoint_id = aws_vpc_endpoint[0].this.id
 }

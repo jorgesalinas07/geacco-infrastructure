@@ -4,7 +4,7 @@ variable "subnet_count" {
   default = {
     db_private    = 2 // Deployment requirement
     cloud_private = 2 // In case one of the subnets goes down for whatever reason, your site is still up and running
-    EC_private = 2
+    EC_private    = 2
   }
 }
 
@@ -25,12 +25,12 @@ variable "db_subnet_cidr_block" {
 }
 
 variable "db_name" {
-  type = string
+  type        = string
   description = "Name for the database"
 }
 
 variable "ingress_security_groups" {
-  type = list
+  type        = list(any)
   description = "list of security groups with access to the db"
 }
 
@@ -46,7 +46,7 @@ variable "settings" {
       skip_final_snapshot = true
     },
     "web_app" = {
-      count         = 1
+      count = 1
       #instance_type = "t2.medium"
       instance_type = "t3.xlarge"
     }

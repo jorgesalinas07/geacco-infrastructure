@@ -1,10 +1,10 @@
 variable "ec2_name" {
-  type = string
+  type        = string
   description = "Name of the subnet to create"
 }
 
 variable "vpc_id" {
-  type = string
+  type        = string
   description = "Id of the VPC to deploy on"
 }
 
@@ -14,7 +14,7 @@ variable "subnet_count" {
   default = {
     db_private    = 2 // Deployment requirement
     cloud_private = 2 // In case one of the subnets goes down for whatever reason, your site is still up and running
-    EC_private = 2
+    EC_private    = 2
   }
 }
 

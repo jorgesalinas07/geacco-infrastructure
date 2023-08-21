@@ -1,60 +1,60 @@
 variable "bucket_name" {
-  type = string
+  type        = string
   description = "Name for the bucket created"
 }
 
 variable "bucket_versioning_status" {
-  type = string
+  type        = string
   description = "Versioning state of the bucket"
-  default = "Enabled"
+  default     = "Enabled"
 }
 
 variable "bucket_encryption_sse_algorithm" {
-  type = string
+  type        = string
   description = " Server-side encryption algorithm to use"
-  default = "AES256"
+  default     = "AES256"
 }
 
 variable "create_security_group" {
-  type = bool
+  type        = bool
   description = "Defines wherther create an s3 bucket security group"
-  default = false
+  default     = false
 }
 
 variable "bucket_security_group_name" {
-  type = string
+  type        = string
   description = "Name for the s3 bucket security group"
 }
 
 variable "bucket_security_group_vpc_id" {
-  type = string
+  type        = string
   description = "Vpc for the s3 bucket security group"
 }
 
 variable "bucket_security_groups" {
-  type = list
+  type        = list(any)
   description = "List of bucket security groups"
 }
 
 variable "aws_region" {
-  type = string
+  type        = string
   description = "Aws region to deploy"
 }
 
 variable "create_vpc_endpoint" {
-  type = bool
+  type        = bool
   description = "Defines wherther create an vpc_endpoint"
-  default = false
+  default     = false
 }
 
 variable "create_endpoint_route_table" {
-  type = bool
+  type        = bool
   description = "Defines wherther create an endpoint_route_table association"
-  default = false
+  default     = false
 }
 
 variable "endpoint_route_table" {
-  type = string
+  type        = string
   description = "Endpoint route table association id"
 }
 

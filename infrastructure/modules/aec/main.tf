@@ -1,7 +1,7 @@
 
 resource "aws_security_group" "this" {
-  name        = terraform.workspace == "stg" ? "${var.ec_name}_security_group_stg" : "${var.ec_name}_security_group_prod"
-  vpc_id      = var.vpc_id
+  name   = terraform.workspace == "stg" ? "${var.ec_name}_security_group_stg" : "${var.ec_name}_security_group_prod"
+  vpc_id = var.vpc_id
 
   ingress {
     description     = "Allow EC traffic from the web only (EC2)"
@@ -9,7 +9,7 @@ resource "aws_security_group" "this" {
     to_port         = 6379
     protocol        = "tcp"
     security_groups = var.ec_security_groups
-  } 
+  }
 
   egress {
     from_port   = 0
@@ -20,13 +20,13 @@ resource "aws_security_group" "this" {
 }
 
 resource "aws_elasticache_replication_group" "base_project_EC_replication_group" {
-  replication_group_id       = var.replication_group_id
-  description = "Redis from Geacco app"
-  node_type            = var.node_type
-  port                 = var.port
-  engine_version = var.engine_version
-  subnet_group_name          = aws_elasticache_subnet_group.this.name
-  security_group_ids = [aws_security_group.this.id]
+  replication_group_id    = var.replication_group_id
+  description             = "Redis from Geacco app"
+  node_type               = var.node_type
+  port                    = var.port
+  engine_version          = var.engine_version
+  subnet_group_name       = aws_elasticache_subnet_group.this.name
+  security_group_ids      = [aws_security_group.this.id]
   num_node_groups         = 1
   replicas_per_node_group = 1
 
