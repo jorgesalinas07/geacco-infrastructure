@@ -14,6 +14,7 @@ resource "aws_route_table" "this" {
 
   tags = {
     Name = terraform.workspace == "stg" ? "geacco_app_db_route_table_stg" : "geacco_app_db_route_table_prod"
+  }
 }
 
 resource "aws_route_table_association" "this" {
