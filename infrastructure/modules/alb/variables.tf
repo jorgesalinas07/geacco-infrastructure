@@ -1,17 +1,6 @@
-variable "create_security_group" {
-  type        = bool
-  description = "Whether to create a security group or not"
-  default     = false
-}
-
 variable "security_group_name" {
   type        = string
   description = "Name of the security group created"
-}
-
-variable "security_group_description" {
-  type        = string
-  description = "Description of the security group created"
 }
 
 variable "vpc_id" {
@@ -22,12 +11,6 @@ variable "vpc_id" {
 variable "my_ip" {
   type        = string
   description = "IP of computer to ssh from"
-}
-
-variable "create_lb_target_group" {
-  type        = bool
-  description = "Whether to create a lg target group or not"
-  default     = false
 }
 
 variable "lb_target_group_name" {
