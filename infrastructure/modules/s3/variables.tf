@@ -15,42 +15,19 @@ variable "bucket_encryption_sse_algorithm" {
   default     = "AES256"
 }
 
-variable "create_security_group" {
-  type        = bool
-  description = "Defines wherther create an s3 bucket security group"
-  default     = false
-}
-
-variable "bucket_security_group_name" {
-  type        = string
-  description = "Name for the s3 bucket security group"
-}
-
 variable "bucket_security_group_vpc_id" {
   type        = string
   description = "Vpc for the s3 bucket security group"
 }
 
 variable "bucket_security_groups" {
-  type        = list(any)
+  type        = list
   description = "List of bucket security groups"
 }
 
 variable "aws_region" {
   type        = string
   description = "Aws region to deploy"
-}
-
-variable "create_vpc_endpoint" {
-  type        = bool
-  description = "Defines wherther create an vpc_endpoint"
-  default     = false
-}
-
-variable "create_endpoint_route_table" {
-  type        = bool
-  description = "Defines wherther create an endpoint_route_table association"
-  default     = false
 }
 
 variable "endpoint_route_table" {
