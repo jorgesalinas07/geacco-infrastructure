@@ -29,6 +29,12 @@ variable "cloud_subnet_cidr_block" {
   ]
 }
 
+variable "my_ip" {
+  description = "Master Ip Address"
+  type        = string
+  sensitive   = true
+}
+
 variable "settings" {
   description = "Configuration settings"
   type        = map(any)

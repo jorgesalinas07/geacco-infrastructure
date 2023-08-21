@@ -78,7 +78,7 @@ data "aws_ami" "ecs_ami" {
   }
 }
 
-resource "aws_instance" "base_project_EC2_instance" {
+resource "aws_instance" "this" {
   count                       = var.settings.web_app.count
   ami                         = data.aws_ami.ecs_ami.id
   instance_type               = var.settings.web_app.instance_type
@@ -90,7 +90,7 @@ resource "aws_instance" "base_project_EC2_instance" {
   user_data_base64            = filebase64("user_data.sh")
 
   tags = {
-    Name = terraform.workspace == "stg" ? "geacco_EC2_instance_stg" : "geacco_EC2_instance_prod"
+    Name = terraform.workspace == "stg" ? "${var.ec2_name}_stg" : "${var.ec2_name}_prod"
   }
 }
 
@@ -98,11 +98,11 @@ resource "aws_instance" "base_project_EC2_instance" {
 resource "aws_eip" "geacco_EC2_eip" {
   count = var.settings.web_app.count
 
-  instance = aws_instance.base_project_EC2_instance[count.index].id
+  instance = aws_instance.this[count.index].id
 
   vpc = true
 
   tags = {
-    Name = terraform.workspace == "stg" ? "geacco_EC2_iep_instance_stg" : "geacco_EC2_iep_instance_prod"
+    Name = terraform.workspace == "stg" ? "${var.ec2_name}_iep_instance_stg" : "${var.ec2_name}_iep_instance_prod"
   }
 }
