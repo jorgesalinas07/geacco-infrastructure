@@ -73,7 +73,7 @@ resource "aws_lb_target_group" "base_project_alb_target_group" {
   #   timeout = 2
     interval = 5// Not so sure
     timeout = 2// Not so sure
-    matcher = "200,301"  # has to be HTTP 200 or fails
+    matcher = "200,301,302"  # has to be HTTP 200 or fails
   }
 
   # health_check {
@@ -147,10 +147,13 @@ resource "aws_ecs_task_definition" "base_project_ecs_task_definition" {
   network_mode             = "awsvpc"
   execution_role_arn       = aws_iam_role.base_project_ecs_execution_iam_role.arn
   requires_compatibilities = ["EC2"]
-  # memory                   = "1024"
-  # cpu                      = "512"
+  memory                   = "1024"
+  cpu                      = "512"
   volume {
               name = "socket_volume"
+          }
+  volume {
+              name = "static_volume"
           }
 
   container_definitions = jsonencode([
@@ -193,18 +196,55 @@ resource "aws_ecs_task_definition" "base_project_ecs_task_definition" {
       {
         name  = "ENV",
         value = "build"
+      },
+      {
+        name  = "DJANGO_SUPERUSER_PASSWORD",
+        value = "${var.DJANGO_SUPERUSER_PASSWORD}"
+      },
+      {
+        name  = "DJANGO_SUPERUSER_USERNAME",
+        value = "${var.DJANGO_SUPERUSER_USERNAME}"
+      },
+      {
+        name  = "DJANGO_SUPERUSER_EMAIL",
+        value = "${var.DJANGO_SUPERUSER_EMAIL}"
       }
-    ],
+      ],
       #command = ["alembic", "upgrade", "head"]
       #command = ["python3", "manage.py", "migrate"]
-      command = ["python3", "manage.py", "cities_light"]
+      # command = ["python3", "manage.py", "cities_light"]
       #command = ["make", "setup_environment"]
       #command = ["make", "test_sh"]
       #command = ["export", "DATABASE_URL=postgres://geaccousername:password@geaccodbprod.ciutmnlgyney.us-east-1.rds.amazonaws.com:5432/geacco_db_prod"],
+      # command = [
+      #       "python3",
+      #       "manage.py",
+      #       "createsuperuser",
+      #       "--noinput",
+      #       "--username",
+      #       "jorge.salinas",
+      #       "--email",
+      #       "jorge.salinas@example.com"
+      #   ],
+      # command = var.DJANGO_SUPERUSER_USERNAME == "" ? [] : [
+      #   "python3",
+      #   "manage.py",
+      #   "createsuperuser",
+      #   "--noinput",
+      #   "--username",
+      #   "${var.DJANGO_SUPERUSER_USERNAME}",
+      #   "--email",
+      #   "${var.DJANGO_SUPERUSER_EMAIL}",
+      # ]
       mountPoints = [
           {
               "sourceVolume": "socket_volume",
               "containerPath": "/app/run",
+              "readOnly": false
+          },
+          {
+              "sourceVolume": "static_volume",
+              "containerPath": "/app/static",
               "readOnly": false
           }
       ],
@@ -214,7 +254,8 @@ resource "aws_ecs_task_definition" "base_project_ecs_task_definition" {
           hostPort      = 8002,
           protocol      = "tcp"
         }
-      ]
+      ],
+      entryPoint = ["/app/setup_environment"],
       logConfiguration = {
           logDriver = "awslogs",
           options = {
@@ -227,7 +268,7 @@ resource "aws_ecs_task_definition" "base_project_ecs_task_definition" {
     },
     {
       essential   = true
-      memory      = 256
+      memory      = 257
       name        = "base_project_ngix_image"
       cpu         = 256
       # entryPoint = ["/"],

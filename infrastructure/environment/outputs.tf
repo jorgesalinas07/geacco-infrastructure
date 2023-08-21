@@ -21,6 +21,11 @@ output "database_endpoint" {
   value       = aws_db_instance.geacco_db_instance.address
 }
 
+output "database_name" {
+  description = "The endpoint of the database"
+  value       = aws_db_instance.geacco_db_instance.db_name
+}
+
 output "redis_endpoint" {
   description = "The endpoint of redis"
   value       = aws_elasticache_replication_group.base_project_EC_replication_group.primary_endpoint_address

@@ -126,3 +126,24 @@ variable "iam_policy_arn_task_ecs" {
     "arn:aws:iam::aws:policy/CloudWatchLogsFullAccess",
   ]
 }
+
+variable "DJANGO_SUPERUSER_USERNAME" {
+  description = "Username for superuser"
+  type        = string
+  default = ""
+  sensitive   = true
+}
+
+variable "DJANGO_SUPERUSER_EMAIL" {
+  description = "Email for superuser"
+  type        = string
+  default = ""
+  sensitive   = true
+}
+
+variable "DJANGO_SUPERUSER_PASSWORD" {
+  description = "Password for superuser"
+  type        = string
+  default = ""
+  sensitive   = true
+}

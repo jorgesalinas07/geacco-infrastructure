@@ -116,12 +116,37 @@ resource "aws_instance" "base_project_EC2_instance" {
   associate_public_ip_address = true //Will removed when address route 53
   iam_instance_profile        = aws_iam_instance_profile.base_project_repository_intance_profile.name
   vpc_security_group_ids      = [aws_security_group.EC2_security_group.id]
+
+  # Usar solo en caso de creación de instancia
+
+  # root_block_device {
+  #   volume_size = 35 // Add this volume size. Potencial 50
+  # }
+
+  # ebs_block_device {
+  #   device_name = "/dev/xvda"
+  #   volume_size = 35
+  # }
   user_data_base64            = filebase64("user_data.sh")
 
   tags = {
     Name = terraform.workspace == "stg" ? "geacco_EC2_instance_stg" : "geacco_EC2_instance_prod"
   }
 }
+
+# resource "aws_ebs_volume" "root_volume" {
+#   count                       = var.settings.web_app.count
+#   availability_zone = data.aws_availability_zones.available.names[count.index]
+#   size             = 35
+#   # Other EBS volume options can be set here as needed
+# }
+
+# resource "aws_volume_attachment" "root_volume_attachment" {
+#   count                       = var.settings.web_app.count
+#   device_name = "/dev/xvda"
+#   volume_id   = aws_ebs_volume.root_volume[count.index].id
+#   instance_id = aws_instance.base_project_EC2_instance[count.index].id
+# }
 
 // Get internet connectivity
 resource "aws_eip" "geacco_EC2_eip" {

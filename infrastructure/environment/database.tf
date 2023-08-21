@@ -36,6 +36,7 @@ resource "aws_security_group" "RDS_security_group" {
     from_port       = 5432
     to_port         = 5432
     protocol        = "tcp"
+    cidr_blocks = ["${var.my_ip}/32"]
     security_groups = [aws_security_group.EC2_security_group.id, aws_security_group.ECS_security_group.id]
   }
 
