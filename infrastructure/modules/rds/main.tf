@@ -1,3 +1,7 @@
+data "aws_availability_zones" "available" {
+  state = "available"
+}
+
 resource "aws_subnet" "this" {
   count             = var.subnet_count.db_private
   vpc_id            = var.vpc_id
@@ -33,7 +37,7 @@ resource "aws_security_group" "this" {
     from_port       = 5432
     to_port         = 5432
     protocol        = "tcp"
-    security_groups = var.ingress_security_group
+    security_groups = var.ingress_security_groups
   }
 
   egress {

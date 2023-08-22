@@ -1,3 +1,37 @@
+data "aws_availability_zones" "available" {
+  state = "available"
+}
+
+resource "aws_iam_instance_profile" "base_project_repository_intance_profile" {
+  role = aws_iam_role.base_project_repository_role.name
+}
+
+resource "aws_iam_role_policy_attachment" "base_project_repository_attachment" {
+  count      = length(var.iam_policy_arn)
+  policy_arn = var.iam_policy_arn[count.index]
+  role       = aws_iam_role.base_project_repository_role.name
+}
+
+resource "aws_iam_role" "base_project_repository_role" {
+  name               = "base-project-ec2-iam-role"
+  path               = "/"
+  assume_role_policy = <<EOF
+    {
+        "Version": "2012-10-17",
+        "Statement": [
+            {
+                "Action": "sts:AssumeRole",
+                "Principal": {
+                  "Service": "ec2.amazonaws.com"
+                },
+                "Effect": "Allow",
+                "Sid": ""
+            }
+        ]
+    }
+    EOF
+}
+
 resource "aws_subnet" "this" {
   count             = var.subnet_count.cloud_private
   vpc_id            = var.vpc_id
@@ -78,6 +112,10 @@ data "aws_ami" "ecs_ami" {
   }
 }
 
+resource "aws_iam_instance_profile" "this" {
+  role = aws_iam_role.base_project_repository_role.name
+}
+
 resource "aws_instance" "this" {
   count                       = var.settings.web_app.count
   ami                         = data.aws_ami.ecs_ami.id
@@ -85,8 +123,8 @@ resource "aws_instance" "this" {
   subnet_id                   = aws_subnet.this[count.index].id
   key_name                    = aws_key_pair.this.key_name
   associate_public_ip_address = true //Will removed when address route 53
-  iam_instance_profile        = aws_iam_instance_profile.base_project_repository_intance_profile.name
-  vpc_security_group_ids      = [aws_security_group.EC2_security_group.id]
+  iam_instance_profile        = aws_iam_instance_profile.this.name
+  vpc_security_group_ids      = [aws_security_group.this.id]
   user_data_base64            = filebase64("user_data.sh")
 
   tags = {
@@ -100,7 +138,7 @@ resource "aws_eip" "geacco_EC2_eip" {
 
   instance = aws_instance.this[count.index].id
 
-  vpc = true
+  //vpc = true DEPRECATED
 
   tags = {
     Name = terraform.workspace == "stg" ? "${var.ec2_name}_iep_instance_stg" : "${var.ec2_name}_iep_instance_prod"

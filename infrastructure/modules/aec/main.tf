@@ -1,3 +1,6 @@
+data "aws_availability_zones" "available" {
+  state = "available"
+}
 
 resource "aws_security_group" "this" {
   name   = terraform.workspace == "stg" ? "${var.ec_name}_security_group_stg" : "${var.ec_name}_security_group_prod"

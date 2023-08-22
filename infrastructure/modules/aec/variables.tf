@@ -37,7 +37,7 @@ variable "engine_version" {
 }
 
 variable "num_node_groups" {
-  type        = number
+  type        = string
   description = "ec engine version"
   default     = "5.0.6"
 }

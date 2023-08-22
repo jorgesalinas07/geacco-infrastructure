@@ -26,7 +26,7 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "this" {
 resource "aws_security_group" "this" {
   name        = terraform.workspace == "stg" ? "S3_security_group_stg" : "S3_security_group_prod"
   description = "A security group for the S3 database"
-  vpc_id      = var.bucket_security_vpc_id
+  vpc_id      = var.vpc_id
   // Only the EC2 instances should be able to communicate with S3
   egress {
     description     = "Allow S3 traffic from the web only"

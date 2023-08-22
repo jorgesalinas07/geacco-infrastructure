@@ -35,3 +35,8 @@ variable "endpoint_route_table" {
   description = "Endpoint route table association id"
 }
 
+variable "vpc_id" {
+  type        = string
+  description = "Endpoint route table association id"
+}
+

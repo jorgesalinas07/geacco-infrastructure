@@ -52,3 +52,9 @@ variable "settings" {
     }
   }
 }
+
+variable "iam_policy_arn" {
+  description = "IAM Policy to be attached to role"
+  type        = list(string)
+  default     = ["arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly", "arn:aws:iam::aws:policy/service-role/AmazonEC2ContainerServiceforEC2Role"]
+}
