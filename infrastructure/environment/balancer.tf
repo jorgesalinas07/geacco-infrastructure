@@ -12,13 +12,13 @@ resource "aws_security_group" "ALB_security_group" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  ingress {
-    description = "Allow SSH from computer"
-    from_port   = "22"
-    to_port     = "22"
-    protocol    = "tcp"
-    cidr_blocks = ["${var.my_ip}/32"]
-  }
+  # ingress {
+  #   description = "Allow SSH from computer"
+  #   from_port   = "22"
+  #   to_port     = "22"
+  #   protocol    = "tcp"
+  #   cidr_blocks = ["${var.my_ip}/32"]
+  # }
 
   # EC2 instances should be accessible anywhere on the internet via HTTP.
   ingress {
@@ -30,13 +30,13 @@ resource "aws_security_group" "ALB_security_group" {
   }
 
   # EC2 instances should be accessible anywhere on the internet via HTTP.
-  ingress {
-    description = "Allow all traffic throught HTTP"
-    from_port   = "8000"
-    to_port     = "8000"
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
+  # ingress {
+  #   description = "Allow all traffic throught HTTP"
+  #   from_port   = "8000"
+  #   to_port     = "8000"
+  #   protocol    = "tcp"
+  #   cidr_blocks = ["0.0.0.0/0"]
+  # }
 
   # EC2 instances should be accessible anywhere on the internet via HTTP.
   ingress {
@@ -122,6 +122,19 @@ resource "aws_lb_listener" "base_project_alb_listener" {
   }
 }
 
+# resource "aws_lb_listener" "lb_listener-webservice-https" {
+#   load_balancer_arn = aws_lb.loadbalancer.arn
+#   port              = "443"
+#   protocol          = "HTTPS"
+#   ssl_policy        = "ELBSecurityPolicy-2016-08"
+#   certificate_arn   = aws_acm_certificate.ssl_certificate.arn
+
+#   default_action {
+#     type             = "forward"
+#     target_group_arn = aws_alb_target_group.alb_public_webservice_target_group.id
+#   }
+# }
+
 # resource "aws_lb_listener_rule" "base_project_alb_listener_rule" {
 #   listener_arn = aws_lb_listener.base_project_alb_listener.arn
 #   priority     = 100
@@ -149,9 +162,9 @@ resource "aws_ecs_task_definition" "base_project_ecs_task_definition" {
   requires_compatibilities = ["EC2"]
   memory                   = "1024"
   cpu                      = "512"
-  volume {
-              name = "socket_volume"
-          }
+  # volume {
+  #             name = "socket_volume"
+  #         }
   volume {
               name = "static_volume"
           }
@@ -237,11 +250,11 @@ resource "aws_ecs_task_definition" "base_project_ecs_task_definition" {
       #   "${var.DJANGO_SUPERUSER_EMAIL}",
       # ]
       mountPoints = [
-          {
-              "sourceVolume": "socket_volume",
-              "containerPath": "/app/run",
-              "readOnly": false
-          },
+          # {
+          #     "sourceVolume": "socket_volume",
+          #     "containerPath": "/app/run",
+          #     "readOnly": false
+          # },
           {
               "sourceVolume": "static_volume",
               "containerPath": "/app/static",
@@ -364,30 +377,30 @@ data "aws_iam_policy_document" "ecs_tasks_execution_role" {
     }
   }
 
-  statement {
-    actions = ["sts:AssumeRole"]
+  # statement {
+  #   actions = ["sts:AssumeRole"]
 
-    principals {
-      type        = "Service"
-      identifiers = ["ecs-tasks.amazonaws.com"]
-    }
+  #   principals {
+  #     type        = "Service"
+  #     identifiers = ["ecs-tasks.amazonaws.com"]
+  #   }
 
-    condition {
-      test     = "StringEquals"
-      variable = "sts:ExternalId"
-      values   = [
-        "ecs.capability.ecr-auth",
-        "ecs.capability.execution-role-ecr-pull",
-        "ecs.capability.docker-remote-api.1.18",
-        "ecs.capability.task-eni",
-        "ecs.capability.docker-remote-api.1.29",
-        "ecs.capability.logging-driver.awslogs",
-        "ecs.capability.execution-role-awslogs",
-        "ecs.capability.docker-remote-api.1.19",
-        "ecs.capability.task-iam-role"
-      ]
-    }
-  }
+  #   condition {
+  #     test     = "StringEquals"
+  #     variable = "sts:ExternalId"
+  #     values   = [
+  #       "ecs.capability.ecr-auth",
+  #       "ecs.capability.execution-role-ecr-pull",
+  #       "ecs.capability.docker-remote-api.1.18",
+  #       "ecs.capability.task-eni",
+  #       "ecs.capability.docker-remote-api.1.29",
+  #       "ecs.capability.logging-driver.awslogs",
+  #       "ecs.capability.execution-role-awslogs",
+  #       "ecs.capability.docker-remote-api.1.19",
+  #       "ecs.capability.task-iam-role"
+  #     ]
+  #   }
+  # }
 }
 
 resource "aws_ecs_service" "base_project_ecs_service" {

@@ -147,3 +147,9 @@ variable "DJANGO_SUPERUSER_PASSWORD" {
   default = ""
   sensitive   = true
 }
+
+variable "domain_name" {
+  type        = string
+  description = "The domain name for the website."
+  default     = "geaccoapp.com"
+}

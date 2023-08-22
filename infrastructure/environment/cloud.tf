@@ -28,17 +28,20 @@ resource "aws_security_group" "EC2_security_group" {
     from_port   = "80"
     to_port     = "80"
     protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"] //Add EC2 security group
+    #cidr_blocks = ["0.0.0.0/0"] //Add EC2 security group
+    security_groups = [
+      "${aws_security_group.ALB_security_group.id}",
+    ]
   }
 
   # EC2 instances should be accessible anywhere on the internet via HTTP.
-  ingress {
-    description = "Allow all traffic throught HTTP"
-    from_port   = "8000"
-    to_port     = "8000"
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
+  # ingress {
+  #   description = "Allow all traffic throught HTTP"
+  #   from_port   = "8000"
+  #   to_port     = "8000"
+  #   protocol    = "tcp"
+  #   cidr_blocks = ["0.0.0.0/0"]
+  # }
 
   // Only you should be able to access the EC2 instances via SSH. //Checked
   ingress {
@@ -120,7 +123,7 @@ resource "aws_instance" "base_project_EC2_instance" {
   # Usar solo en caso de creación de instancia
 
   # root_block_device {
-  #   volume_size = 35 // Add this volume size. Potencial 50
+  #   volume_size = 35
   # }
 
   # ebs_block_device {
