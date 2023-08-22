@@ -44,67 +44,73 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "terraform_state_e
   }
 }
 
-resource "aws_iam_user" "backend-user" {
+resource "aws_iam_user" "backend_user" {
   name = "geacco-app-ci-cd-user"
 }
 
 resource "aws_iam_access_key" "backend_user_api_access" {
-  user = aws_iam_user.backend-user.name
+  user = aws_iam_user.backend_user.name
+}
+
+resource "aws_iam_user_policy_attachment" "test-attach" {
+  count = length(var.iam_policy_arn_ci_cd_user)
+  user       = aws_iam_user.backend_user.name
+  policy_arn = aws_iam_policy.policy.arn
 }
 
 
-resource "aws_iam_user_policy" "backend_user_inline_policy" {
-  name = "geacco-app-ci-cd-policy"
-  user = aws_iam_user.backend-user.name
+# resource "aws_iam_user_policy" "backend_user_inline_policy" {
+#   name = "geacco-app-ci-cd-policy"
+#   user = aws_iam_user.backend_user.name
 
-  policy = <<EOF
-{
-    "Version": "2012-10-17",
-    "Statement": [
-        {
-            "Effect": "Allow",
-            "Action": [
-                "route53domains:*",
-                "ecr:BatchGetImage",
-                "ecr:GetRepositoryPolicy",
-                "ecr:SetRepositoryPolicy",
-                "ecr:BatchCheckLayerAvailability",
-                "ecr:CompleteLayerUpload",
-                "ecr:DescribeImages",
-                "ecr:DescribeRepositories",
-                "ecr:GetDownloadUrlForLayer",
-                "ecr:InitiateLayerUpload",
-                "ecr:ListImages",
-                "ecr:PutImage",
-                "ecr:UploadLayerPart",
-                "ecr:GetAuthorizationToken",
-                "ecr:ListTagsForResource",
-                "ecr:GetLifecyclePolicy",
-                "s3:ListBucket",
-                "s3:GetBucketVersioning",
-                "s3:PutObject",
-                "s3:GetObject",
-                "s3:DeleteObject",
-                "s3:GetObjectVersion",
-                "iam:CreateRole",
-                "iam:PutRolePolicy",
-                "iam:PassRole",
-                "iam:GetRole",
-                "iam:ListRolePolicies",
-                "iam:GetRolePolicy",
-                "iam:ListAttachedRolePolicies",
-                "iam:GetRepositoryPolicy",
-                "iam:SetRepositoryPolicy",
-                "iam:ListInstanceProfilesForRole",
-                "iam:DeleteRolePolicy",
-                "iam:DeleteRole",
-                "logs:DescribeLogGroups",
-                "logs:DescribeLogStreams",
-                "logs:CreateLogDelivery"
-            ],
-            "Resource": "*"
-        }
-    ]
-}
-EOF
-}
+#   policy = <<EOF
+# {
+#     "Version": "2012-10-17",
+#     "Statement": [
+#         {
+#             "Effect": "Allow",
+#             "Action": [
+#                 "route53domains:*",
+#                 "ecr:BatchGetImage",
+#                 "ecr:GetRepositoryPolicy",
+#                 "ecr:SetRepositoryPolicy",
+#                 "ecr:BatchCheckLayerAvailability",
+#                 "ecr:CompleteLayerUpload",
+#                 "ecr:DescribeImages",
+#                 "ecr:DescribeRepositories",
+#                 "ecr:GetDownloadUrlForLayer",
+#                 "ecr:InitiateLayerUpload",
+#                 "ecr:ListImages",
+#                 "ecr:PutImage",
+#                 "ecr:UploadLayerPart",
+#                 "ecr:GetAuthorizationToken",
+#                 "ecr:ListTagsForResource",
+#                 "ecr:GetLifecyclePolicy",
+#                 "s3:ListBucket",
+#                 "s3:GetBucketVersioning",
+#                 "s3:PutObject",
+#                 "s3:GetObject",
+#                 "s3:DeleteObject",
+#                 "s3:GetObjectVersion",
+#                 "iam:CreateRole",
+#                 "iam:PutRolePolicy",
+#                 "iam:PassRole",
+#                 "iam:GetRole",
+#                 "iam:ListRolePolicies",
+#                 "iam:GetRolePolicy",
+#                 "iam:ListAttachedRolePolicies",
+#                 "iam:GetRepositoryPolicy",
+#                 "iam:SetRepositoryPolicy",
+#                 "iam:ListInstanceProfilesForRole",
+#                 "iam:DeleteRolePolicy",
+#                 "iam:DeleteRole",
+#                 "logs:DescribeLogGroups",
+#                 "logs:DescribeLogStreams",
+#                 "logs:CreateLogDelivery"
+#             ],
+#             "Resource": "*"
+#         }
+#     ]
+# }
+# EOF
+# }

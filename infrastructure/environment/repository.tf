@@ -20,7 +20,7 @@ resource "aws_iam_role_policy_attachment" "base_project_repository_attachment" {
 }
 
 resource "aws_iam_role" "base_project_repository_role" {
-  name               = "base-project-ec2-iam-role"
+  name               = terraform.workspace == "stg" ? "base-project-ec2-iam-role-stg" : "base-project-ec2-iam-role-prod"
   path               = "/"
   assume_role_policy = <<EOF
 {

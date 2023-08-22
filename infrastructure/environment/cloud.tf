@@ -130,7 +130,7 @@ resource "aws_instance" "base_project_EC2_instance" {
   #   device_name = "/dev/xvda"
   #   volume_size = 35
   # }
-  user_data_base64            = filebase64("user_data.sh")
+  user_data_base64            = terraform.workspace == "stg" ? filebase64("user_data_stg.sh") : filebase64("user_data.sh")
 
   tags = {
     Name = terraform.workspace == "stg" ? "geacco_EC2_instance_stg" : "geacco_EC2_instance_prod"

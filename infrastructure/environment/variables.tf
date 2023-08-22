@@ -148,7 +148,13 @@ variable "DJANGO_SUPERUSER_PASSWORD" {
   sensitive   = true
 }
 
-variable "domain_name" {
+variable "stg_domain_name" {
+  type        = string
+  description = "The stage domain name for the website."
+  default     = "geaccoapp.stg.com"
+}
+
+variable "prod_domain_name" {
   type        = string
   description = "The domain name for the website."
   default     = "geaccoapp.com"

@@ -1,5 +1,5 @@
 resource "aws_s3_bucket" "geacco_app_bucket" {
-  bucket = "geacco-app-bucket"
+  bucket = terraform.workspace == "stg" ? "geacco-app-bucket-stg" : "geacco-app-bucket-prod"
 
   tags = {
     Name = terraform.workspace == "stg" ? "geacco_app_bucket_stg" : "geacco_app_bucket_prod"

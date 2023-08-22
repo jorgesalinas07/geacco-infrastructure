@@ -6,7 +6,7 @@ sudo yum install -y ecs-init
 sudo service docker start
 sudo start ecs
 
-echo ECS_CLUSTER=base-project-ecs-cluster-prod >> /etc/ecs/ecs.config
+echo ECS_CLUSTER=base-project-ecs-cluster-stg >> /etc/ecs/ecs.config
 cat /etc/ecs/ecs.config | grep "ECS_CLUSTER"
 
 # #!/bin/bash

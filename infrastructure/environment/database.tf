@@ -70,10 +70,10 @@ resource "aws_db_instance" "geacco_db_instance" {
   engine                 = var.settings.database.engine
   engine_version         = var.settings.database.engine_version
   instance_class         = var.settings.database.instance_class
-  # username               = local.db_creds.username
-  # password               = local.db_creds.password
-  username               = var.db_username
-  password               = var.db_password
+  username               = local.db_creds.username
+  password               = local.db_creds.password
+  # username               = var.db_username
+  # password               = var.db_password
   db_subnet_group_name   = aws_db_subnet_group.geacco_db_subnet_group.id
   vpc_security_group_ids = [aws_security_group.RDS_security_group.id]
   skip_final_snapshot    = var.settings.database.skip_final_snapshot
@@ -111,8 +111,8 @@ resource "aws_security_group" "EC_security_group" {
 # }
 
 resource "aws_elasticache_replication_group" "base_project_EC_replication_group" {
-  replication_group_id       = "base-project-EC-cluster"
-  description = "Redis from Geacco app"
+  replication_group_id       = terraform.workspace == "stg" ? "baseprojectECclusterstg" : "baseprojectECclusterprod"
+  description = terraform.workspace == "stg" ? "Redis from Geacco app stg" : "Redis from Geacco app prod"
 
   node_type            = "cache.t2.micro"
   port                 = 6379
@@ -169,43 +169,3 @@ resource "aws_elasticache_subnet_group" "base_project_EC_subnet_group" {
   name       = terraform.workspace == "stg" ? "base-project-EC-stg" : "base-project-EC-prod"
   subnet_ids = [for subnet in aws_subnet.base_project_EC_subnet : subnet.id]
 }
-
-# resource "aws_db_instance" "test_db_instance" {
-#   identifier             = terraform.workspace == "stg" ? "testdbstg" : "testdbprod"
-#   allocated_storage      = var.settings.database.allocated_storage
-#   db_name                = terraform.workspace == "stg" ? "test_db_stg" : "test_db_prod"
-#   engine                 = var.settings.database.engine
-#   engine_version         = var.settings.database.engine_version
-#   instance_class         = var.settings.database.instance_class
-#   username               = local.db_creds.username
-#   password               = local.db_creds.password
-#   skip_final_snapshot    = var.settings.database.skip_final_snapshot
-# }
-
-# resource "aws_db_instance" "test_2_db_instance" {
-#   identifier             = terraform.workspace == "stg" ? "test2dbstg" : "test2dbprod"
-#   allocated_storage      = var.settings.database.allocated_storage
-#   db_name                = terraform.workspace == "stg" ? "test2db_stg" : "test2db_prod"
-#   engine                 = var.settings.database.engine
-#   engine_version         = var.settings.database.engine_version
-#   instance_class         = var.settings.database.instance_class
-#   username               = var.db_username
-#   password               = var.db_password
-#   db_subnet_group_name   = aws_db_subnet_group.geacco_db_subnet_group.id
-#   vpc_security_group_ids = [aws_security_group.RDS_security_group.id]
-#   skip_final_snapshot    = var.settings.database.skip_final_snapshot
-# }
-
-# resource "aws_db_instance" "test_3_db_instance" {
-#   identifier             = terraform.workspace == "stg" ? "test3dbstg" : "test3dbprod"
-#   allocated_storage      = var.settings.database.allocated_storage
-#   db_name                = terraform.workspace == "stg" ? "test3db_stg" : "test3db_prod"
-#   engine                 = var.settings.database.engine
-#   engine_version         = var.settings.database.engine_version
-#   instance_class         = var.settings.database.instance_class
-#   username               = local.db_creds.username
-#   password               = local.db_creds.password
-#   db_subnet_group_name   = aws_db_subnet_group.geacco_db_subnet_group.id
-#   vpc_security_group_ids = [aws_security_group.RDS_security_group.id]
-#   skip_final_snapshot    = var.settings.database.skip_final_snapshot
-# }

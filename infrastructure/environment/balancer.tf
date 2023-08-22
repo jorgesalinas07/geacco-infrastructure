@@ -53,7 +53,7 @@ resource "aws_security_group" "ALB_security_group" {
 }
 
 resource "aws_lb_target_group" "base_project_alb_target_group" {
-  name        = "geacco-alb-target-group"
+  name        = terraform.workspace == "stg" ? "geacco-alb-target-group-stg" : "geacco-alb-target-group-prod"
   port        = 8001
   target_type = "ip"
   protocol    = "HTTP"
@@ -94,7 +94,7 @@ resource "aws_lb_target_group" "base_project_alb_target_group" {
 # }
 
 resource "aws_lb" "base_project_alb" { // NLB for database is missing
-  name               = "geacco-ALB"
+  name               = terraform.workspace == "stg" ? "geacco-ALB-stg" : "geacco-ALB-prod"
   internal           = false
   load_balancer_type = "application"
   security_groups    = [aws_security_group.ALB_security_group.id]
@@ -122,41 +122,25 @@ resource "aws_lb_listener" "base_project_alb_listener" {
   }
 }
 
-# resource "aws_lb_listener" "lb_listener-webservice-https" {
-#   load_balancer_arn = aws_lb.loadbalancer.arn
+# resource "aws_lb_listener" "base_project_webservice_https" {
+#   load_balancer_arn = aws_lb.base_project_alb.arn
 #   port              = "443"
 #   protocol          = "HTTPS"
 #   ssl_policy        = "ELBSecurityPolicy-2016-08"
-#   certificate_arn   = aws_acm_certificate.ssl_certificate.arn
+#   certificate_arn   = "arn:aws:acm:us-east-1:805389546304:certificate/2b2dae1d-71ce-4c26-a766-590a72892ae6"
 
 #   default_action {
 #     type             = "forward"
-#     target_group_arn = aws_alb_target_group.alb_public_webservice_target_group.id
-#   }
-# }
-
-# resource "aws_lb_listener_rule" "base_project_alb_listener_rule" {
-#   listener_arn = aws_lb_listener.base_project_alb_listener.arn
-#   priority     = 100
-
-#   action {
-#     type             = "forward"
-#     target_group_arn = aws_lb_target_group.base_project_alb_target_group.arn
-#   }
-
-#   condition {
-#     source_ip {
-#       values = ["18.204.41.246/32"]
-#     }
+#     target_group_arn = aws_lb_target_group.base_project_alb_target_group.id
 #   }
 # }
 
 resource "aws_ecs_cluster" "base_project_ecs_cluster" {
-  name = "base-project-ecs-cluster"
+  name = terraform.workspace == "stg" ? "base-project-ecs-cluster-stg" : "base-project-ecs-cluster-prod"
 }
 
 resource "aws_ecs_task_definition" "base_project_ecs_task_definition" {
-  family                   = "base_project_image"
+  family                   = terraform.workspace == "stg" ? "base-project-image-stg" : "base-project-image-prod"
   network_mode             = "awsvpc"
   execution_role_arn       = aws_iam_role.base_project_ecs_execution_iam_role.arn
   requires_compatibilities = ["EC2"]
@@ -173,7 +157,7 @@ resource "aws_ecs_task_definition" "base_project_ecs_task_definition" {
     {
       essential   = true
       memory      = 256
-      name        = "base_project_image"
+      name        = terraform.workspace == "stg" ? "base-project-image-stg" : "base-project-image-prod"
       cpu         = 256
       # entryPoint = ["/"],
       image       = "${var.REPOSITORY_URL}:${var.IMAGE_TAG}"
@@ -282,7 +266,7 @@ resource "aws_ecs_task_definition" "base_project_ecs_task_definition" {
     {
       essential   = true
       memory      = 257
-      name        = "base_project_ngix_image"
+      name        = terraform.workspace == "stg" ? "base-project-ngix-image-stg" : "base-project-ngix-image-prod"
       cpu         = 256
       # entryPoint = ["/"],
       image       = "${var.REPOSITORY_URL_NGINX}:${var.IMAGE_TAG_NGINX}"
@@ -326,7 +310,7 @@ resource "aws_ecs_task_definition" "base_project_ecs_task_definition" {
       #command = ["export", "DATABASE_URL=postgres://geaccousername:password@geaccodbprod.ciutmnlgyney.us-east-1.rds.amazonaws.com:5432/geacco_db_prod"],
       volumesFrom = [
       {
-          sourceContainer = "base_project_image",
+          sourceContainer = terraform.workspace == "stg" ? "base-project-image-stg" : "base-project-image-prod",
           readOnly = false
       }
       ]
@@ -354,7 +338,7 @@ resource "aws_ecs_task_definition" "base_project_ecs_task_definition" {
 
 
 resource "aws_iam_role" "base_project_ecs_execution_iam_role" {
-  name               = "base_project_ecs_task_role"
+  name               = terraform.workspace == "stg" ? "base-project-ecs-task-role-stg" : "base-project-ecs-task-role-prod"
   assume_role_policy = data.aws_iam_policy_document.ecs_tasks_execution_role.json
 }
 
@@ -405,7 +389,7 @@ data "aws_iam_policy_document" "ecs_tasks_execution_role" {
 
 resource "aws_ecs_service" "base_project_ecs_service" {
   depends_on           = [aws_lb_listener.base_project_alb_listener]
-  name                 = "base_project_ecs_service"
+  name                 = terraform.workspace == "stg" ? "base-project-ecs-service-stg" : "base-project-ecs-service-prod"
   #deployment_circuit_breaker Add this later
 
   launch_type          = "EC2"
@@ -420,7 +404,7 @@ resource "aws_ecs_service" "base_project_ecs_service" {
   load_balancer {
     target_group_arn = aws_lb_target_group.base_project_alb_target_group.arn
     #container_name   = "base_project_image"
-    container_name   = "base_project_ngix_image"
+    container_name   = terraform.workspace == "stg" ? "base-project-ngix-image-stg" : "base-project-ngix-image-prod"
     container_port   = 8001
   }
 

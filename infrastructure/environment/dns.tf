@@ -1,7 +1,7 @@
 # SSL Certificate
 resource "aws_acm_certificate" "ssl_certificate" {
-  domain_name               = var.domain_name
-  subject_alternative_names = ["*.${var.domain_name}"]
+  domain_name               = terraform.workspace == "stg" ? var.stg_domain_name : var.prod_domain_name
+  #subject_alternative_names = ["*.${var.domain_name}"]
   validation_method         = "DNS"
 
   lifecycle {
@@ -19,12 +19,12 @@ resource "aws_acm_certificate" "ssl_certificate" {
 # }
 
 resource "aws_route53_zone" "geacco_zone" {
-  name = "${var.domain_name}."
+  name = terraform.workspace == "stg" ? var.stg_domain_name : var.prod_domain_name
 }
 
 resource "aws_route53_record" "geacco_record" { //performance_main_record
   zone_id = aws_route53_zone.geacco_zone.zone_id
-  name    = var.domain_name
+  name    = terraform.workspace == "stg" ? var.stg_domain_name : var.prod_domain_name
   type    = "A"
 
   alias {

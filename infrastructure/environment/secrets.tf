@@ -1,5 +1,5 @@
 resource "aws_secretsmanager_secret" "db_credential" {
-   name = "db-credential"
+   name = terraform.workspace == "stg" ? "db-credential-stg" : "db-credential-prod"
 }
 
 resource "aws_secretsmanager_secret_version" "db_credentials_secret_version" {
