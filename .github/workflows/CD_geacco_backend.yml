@@ -22,22 +22,25 @@ jobs:
 
       - name: Check Current Secret Value
         id: check-secret
-        run: |
-          CURRENT_STATE=$(echo ${{ secrets.ALTERNATE_STATE }})
-          if [[ $CURRENT_STATE == "0" ]]; then
-            NEW_STATE="1"
-          else
-            NEW_STATE="0"
-          fi
-          echo "Current state: $CURRENT_STATE"
-          echo "New state: $NEW_STATE"
-          echo "::set-output name=new_state::$NEW_STATE"
-
-      - name: Update Secret
-        id: update-secret
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
         run: |
-          NEW_STATE=${{ steps.check-secret.outputs.new_state }}
+          CURRENT_STATE=$(echo ${{ secrets.ALTERNATE_STATE }})
+          if [[ $CURRENT_STATE == "8002" ]]; then
+            NEW_STATE="8004"
+          else
+            NEW_STATE="8002"
+          fi
+          echo "Current state: $CURRENT_STATE"
+          echo "New state: $NEW_STATE"
           echo "Updating secret to $NEW_STATE"
           gh secret set ALTERNATE_STATE --body $NEW_STATE
+
+      # - name: Update Secret
+      #   id: update-secret
+      #   env:
+      #     GH_TOKEN: ${{ secrets.GH_TOKEN }}
+      #   run: |
+      #     NEW_STATE=${{ steps.check-secret.outputs.new_state }}
+      #     echo "Updating secret to $NEW_STATE"
+      #     gh secret set ALTERNATE_STATE --body $NEW_STATE
