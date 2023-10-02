@@ -1,0 +1,36 @@
+name: CD
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build-geacco-cd:
+    runs-on: ubuntu-22.04
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.10'
+
+      - name: Select ECS Task Host Port
+        id: select_ECS_task_host_port
+        run: |
+          PR_NUMBER=${{ github.event.pull_request.number }}
+          IS_PRIME=$(node -e "function isPrime(num) { for(let i = 2, s = Math.sqrt(num); i <= s; i++) if(num % i === 0) return 0; return num > 1; } console.log(isPrime(${PR_NUMBER}) ? 1 : 0)")
+          # Set the selected_port variable based on IS_PRIME
+          if [ $IS_PRIME -eq 1 ]; then
+            SELECTED_PORT=8002
+          else
+            SELECTED_PORT=8004
+          fi
+          # Set the selected_port environment variable
+          echo "SELECTED_PORT=${SELECTED_PORT}" >> $GITHUB_ENV
+          echo "SELECTED_PORT=${SELECTED_PORT}"
