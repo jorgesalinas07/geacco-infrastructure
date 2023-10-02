@@ -20,18 +20,24 @@ jobs:
         with:
           python-version: '3.10'
 
-      - name: Select ECS Task Host Port
-        id: select_ECS_task_host_port
+      - name: Check Current Secret Value
+        id: check-secret
         run: |
-          PR_NUMBER=$(jq -r '.pull_request.number' $GITHUB_EVENT_PATH)
-          IS_PRIME=$(node -e "function isPrime(num) { for(let i = 2, s = Math.sqrt(num); i <= s; i++) if(num % i === 0) return 0; return num > 1; } console.log(isPrime(${PR_NUMBER}) ? 1 : 0)")
-          # Set the selected_port variable based on IS_PRIME
-          if [ $IS_PRIME -eq 1 ]; then
-            SELECTED_PORT=8002
+          CURRENT_STATE=$(echo ${{ secrets.ALTERNATE_STATE }})
+          if [[ $CURRENT_STATE == "0" ]]; then
+            NEW_STATE="1"
           else
-            SELECTED_PORT=8004
+            NEW_STATE="0"
           fi
-          # Set the selected_port environment variable
-          echo "SELECTED_PORT=${SELECTED_PORT}" >> $GITHUB_ENV
-          echo "PR_NUMBER=${PR_NUMBER}"
-          echo "SELECTED_PORT=${SELECTED_PORT}"
+          echo "Current state: $CURRENT_STATE"
+          echo "New state: $NEW_STATE"
+          echo "::set-output name=new_state::$NEW_STATE"
+
+      - name: Update Secret
+        id: update-secret
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+        run: |
+          NEW_STATE=${{ steps.check-secret.outputs.new_state }}
+          echo "Updating secret to $NEW_STATE"
+          echo -n $NEW_STATE | gh secret set ALTERNATE_STATE --body -
