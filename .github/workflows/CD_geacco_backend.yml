@@ -41,3 +41,4 @@ jobs:
           NEW_STATE=${{ steps.check-secret.outputs.new_state }}
           echo "Updating secret to $NEW_STATE"
           echo -n $NEW_STATE | gh secret set ALTERNATE_STATE --body -
+
